@@ -1,5 +1,7 @@
 # YC-Hackathon-Oct-2025
 
+Agentically scan for bugs in FastAPI backend servers.
+
 ## Contributors
 
 TODO
@@ -7,6 +9,8 @@ TODO
 ## Design
 
 <img width="3380" height="1902" alt="agentic api bug finder" src="https://github.com/user-attachments/assets/1cd6f365-456f-4bf8-93be-07afba777e67" />
+
+![img_3529](https://github.com/user-attachments/assets/63ea2c70-2147-446b-b826-e6cda80aa182)
 
 ## Components
 
@@ -43,3 +47,6 @@ We will use [Mastra](https://mastra.ai) to write our agents. They will use [Moss
 They will use the provided API url and look for a openapi.json to know what routes to call. It can remember this with Hyperspell.
 
 The semantic search with the source aware GitHub pulling. If we want to test an endpoint called "/test", we can use either Moss or Convex to pull up the relevant code to augment our result.
+
+<img width="721" height="738" alt="image" src="https://github.com/user-attachments/assets/adc30cd0-29e2-416f-840c-129bc9b849be" />
+

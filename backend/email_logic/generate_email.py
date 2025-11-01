@@ -1,14 +1,17 @@
 """
 Email generation script using LangChain + Google Gemini.
-Analyzes API testing results (errors, metrics, status codes) and generates a summary email.
+Analyzes API testing results and generates email as JSON output.
+Returns: {"subject": "...", "text": "...", "html": "..."}
 """
 
 import os
+import json
 from pathlib import Path
-from typing import List, Dict
+from typing import Dict
 from dotenv import load_dotenv
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_core.prompts import ChatPromptTemplate
+from langchain_core.output_parsers import JsonOutputParser
 
 # Load environment variables
 load_dotenv()
@@ -89,81 +92,86 @@ Skip successful tests but be thorough on failures.""")
     }
 
 
-def generate_email(analysis: str, recipient: str = "team@example.com") -> str:
+def generate_email_json(analysis: str) -> Dict[str, str]:
     """
-    Generate a professional HTML email formatted for Gmail with Recompile branding.
+    Generate email as strict JSON with subject, text, and html fields.
+    Returns validated JSON dictionary.
     """
     
     email_prompt = ChatPromptTemplate.from_messages([
-        ("system", """You are writing a friendly, professional HTML email from a coworker about API testing errors.
+        ("system", """You are an AI that generates emails in STRICT JSON format.
 
-CRITICAL REQUIREMENTS:
-1. Start with Recompile header at the very top: <div class="email-header"><h1>Recompile</h1></div>
-2. Add a friendly greeting like "Hello, here is your report..." or "Hi there, your API test results are in..."
-3. Use proper HTML formatting with inline CSS for Gmail compatibility
-4. Use clean typography (Arial, sans-serif)
-5. Use bullet points (•) and proper indentation
-6. Use bold for emphasis on key terms
-7. Use subtle colors: red for errors, blue for info
-8. Tone: friendly coworker, not overly formal
+You MUST return ONLY valid JSON with these exact fields:
+{{
+  "subject": "string - email subject line",
+  "text": "string - plain text version of email",
+  "html": "string - HTML email with Recompile branding"
+}}
 
-HTML Structure:
-- Recompile header with styling (background, padding, centered text)
-- Friendly greeting paragraph
-- Brief summary (1-2 sentences)
-- Error details with bullet points and styling
-- Use <strong> for bold, <span style="color: #..."> for colors
-- Add proper spacing and margins
+HTML Requirements:
+1. Start with Recompile header: <div class="email-header" style="background: hsl(342, 85.11%, 52.55%); padding: 20px; text-align: center; margin-bottom: 20px;"><h1 style="color: white; margin: 0; font-size: 28px; font-weight: 600;">Recompile</h1></div>
+2. Friendly greeting like "Hello, here is your report..."
+3. Clean HTML with inline CSS for Gmail
+4. Use Arial font, bullet points, proper spacing
+5. Error details with: route, error code, input cause, location, fix
 
-For each error section:
-- Bold the route and error code
-- Use bullet points for details
-- Keep fix instructions clear and actionable"""),
-        ("human", """Create a Gmail-formatted HTML email based on this API test analysis:
+Text version: Simple plain text summary of the same content.
+
+Return ONLY the JSON object, no markdown, no code blocks, no extra text."""),
+        ("human", """Generate email JSON based on this API test analysis:
 
 {analysis}
 
-Recipient: {recipient}
-
-Format as:
-Subject: [Your subject line]
----
-<div class="email-header" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 20px; text-align: center; margin-bottom: 20px;">
-  <h1 style="color: white; margin: 0; font-size: 28px; font-weight: 600;">Recompile</h1>
-</div>
-
-<div style="font-family: Arial, sans-serif; color: #333; line-height: 1.6; max-width: 600px;">
-  <p style="font-size: 16px;">[Friendly greeting like "Hello, here is your report..." or similar]</p>
-  <p style="font-size: 14px; color: #666;">[Brief summary]</p>
-  
-  <h3 style="color: #d32f2f; margin-top: 24px;">Errors Found:</h3>
-  [Error details with bullets, colors, and styling]
-</div>
-
-Make it feel like a helpful coworker sharing test results, not a formal report.""")
+Return ONLY valid JSON with subject, text, and html fields.""")
     ])
     
-    messages = email_prompt.format_messages(
-        analysis=analysis,
-        recipient=recipient
-    )
+    messages = email_prompt.format_messages(analysis=analysis)
     
-    print("✉️  Generating email content...")
+    print("✉️  Generating email JSON...")
     response = llm.invoke(messages)
     
-    return response.content
+    # Parse and validate JSON
+    try:
+        # Clean the response (remove markdown code blocks if present)
+        content = response.content.strip()
+        if content.startswith("```json"):
+            content = content[7:]
+        if content.startswith("```"):
+            content = content[3:]
+        if content.endswith("```"):
+            content = content[:-3]
+        content = content.strip()
+        
+        email_data = json.loads(content)
+        
+        # Validate required fields
+        required_fields = ["subject", "text", "html"]
+        for field in required_fields:
+            if field not in email_data:
+                raise ValueError(f"Missing required field: {field}")
+        
+        print("✅ JSON validation passed")
+        return email_data
+        
+    except json.JSONDecodeError as e:
+        print(f"❌ JSON parsing error: {e}")
+        print(f"Response content: {response.content[:500]}...")
+        raise ValueError(f"Failed to parse JSON from AI response: {e}")
+    except Exception as e:
+        print(f"❌ Validation error: {e}")
+        raise
 
 
 def main():
-    """Main execution function."""
+    """Main execution function - generates email JSON and optionally sends it."""
     print("=" * 60)
-    print("📧 API Testing Email Report - LangChain + Gemini")
+    print("📧 API Testing Email Generator - LangChain + Gemini")
     print("=" * 60)
     print()
     
-    # Define test results file path (relative to script location)
-    backend_dir = Path(__file__).parent
-    test_results_path = backend_dir / "test_results.txt"
+    # Define test results file path
+    script_dir = Path(__file__).parent
+    test_results_path = script_dir / "test_results.txt"
     
     # Read test results
     print(f"📂 Reading API test results from: {test_results_path}")
@@ -176,35 +184,29 @@ def main():
     print("\n" + "=" * 60)
     print("📊 ANALYSIS RESULTS")
     print("=" * 60)
-    print(analysis_result["analysis"])
+    print(analysis_result["analysis"][:500] + "..." if len(analysis_result["analysis"]) > 500 else analysis_result["analysis"])
     print()
     
-    # Generate email
-    email_content = generate_email(
-        analysis=analysis_result["analysis"],
-        recipient="engineering-team@company.com"
-    )
+    # Generate email JSON
+    email_data = generate_email_json(analysis=analysis_result["analysis"])
     
     print("\n" + "=" * 60)
-    print("📧 GENERATED EMAIL")
+    print("📧 GENERATED EMAIL JSON")
     print("=" * 60)
-    print(email_content)
+    print(f"Subject: {email_data['subject']}")
+    print(f"Text length: {len(email_data['text'])} chars")
+    print(f"HTML length: {len(email_data['html'])} chars")
     print()
     
     # Save output
-    output_path = backend_dir / "generated_email.txt"
-    with open(output_path, 'w') as f:
-        f.write("=" * 60 + "\n")
-        f.write("API TEST ANALYSIS\n")
-        f.write("=" * 60 + "\n\n")
-        f.write(analysis_result["analysis"])
-        f.write("\n\n" + "=" * 60 + "\n")
-        f.write("GENERATED EMAIL\n")
-        f.write("=" * 60 + "\n\n")
-        f.write(email_content)
+    output_json_path = script_dir / "email_output.json"
+    with open(output_json_path, 'w') as f:
+        json.dump(email_data, f, indent=2)
     
-    print(f"✅ Output saved to: {output_path}")
+    print(f"✅ Email JSON saved to: {output_json_path}")
     print()
+    
+    return email_data
 
 
 if __name__ == "__main__":
