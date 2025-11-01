@@ -25,6 +25,7 @@ export const apiTestingAgent = new Agent({
        - Divide-by-zero errors
        - Unvalidated input
        - Missing error handling
+       - Unhandled exceptions (raise/throw statements without proper try/catch)
        - Null pointer exceptions
        - SQL injection vulnerabilities
     4. Generate specific test cases with fetch commands to uncover each issue

@@ -408,6 +408,40 @@ export const codeAnalysisTool = createTool({
       }
     }
 
+    // Detect unhandled exceptions (raise/throw statements)
+    // Check for raise (Python) or throw (JavaScript/TypeScript) statements
+    const raiseThrowPatterns = [
+      /\braise\s+[A-Za-z]/g, // Python: raise Exception
+      /\braise\s*$/g, // Python: raise (re-raise)
+      /\bthrow\s+new\s+Error/g, // JavaScript: throw new Error
+      /\bthrow\s+new\s+[A-Z]/g, // JavaScript: throw new Exception
+      /\bthrow\s+[A-Za-z]/g, // JavaScript: throw variable
+    ];
+
+    const hasRaiseThrow = raiseThrowPatterns.some(pattern => pattern.test(codeWithoutStrings));
+    
+    if (hasRaiseThrow) {
+      // Check if exceptions are within try/catch blocks
+      // Simple check: count raise/throw statements and try/catch blocks
+      const raiseMatches = codeWithoutStrings.match(/\braise\b/g);
+      const throwMatches = codeWithoutStrings.match(/\bthrow\b/g);
+      const tryMatches = codeWithoutStrings.match(/\btry\s*{/g) || codeWithoutStrings.match(/\btry\s*:/g);
+      const catchMatches = codeWithoutStrings.match(/\bcatch\s*\(/g) || codeWithoutStrings.match(/\bexcept\s*:/g);
+      
+      const exceptionCount = (raiseMatches?.length || 0) + (throwMatches?.length || 0);
+      const tryCount = tryMatches?.length || 0;
+      const catchCount = catchMatches?.length || 0;
+      
+      // Flag if there are more exceptions than catch blocks
+      if (exceptionCount > 0 && (tryCount === 0 || catchCount === 0 || exceptionCount > catchCount)) {
+        issues.push({
+          type: "unhandled-exceptions",
+          severity: "high",
+          description: `Found ${exceptionCount} raise/throw statement(s) without proper error handling. Exceptions should be caught in try/catch or try/except blocks.`,
+        });
+      }
+    }
+
     // Detect missing error handling - be more conservative
     // Only flag if there are operations that could throw errors without handling
     const hasAsyncOperations = 
@@ -423,7 +457,8 @@ export const codeAnalysisTool = createTool({
     const hasErrorHandling =
       code.includes("try") ||
       code.includes("catch") ||
-      code.includes(".catch(");
+      code.includes(".catch(") ||
+      code.includes("except");
     
     // Only flag missing error handling if there are operations that could fail
     if (hasAsyncOperations && !hasErrorHandling) {
@@ -541,6 +576,36 @@ export const testCaseGeneratorTool = createTool({
               expectedBehavior: "Should validate input and return 400 error",
             },
             curlCommand: `curl "${baseUrl}${route}?input=not-a-number"`,
+          });
+          break;
+
+        case "unhandled-exceptions":
+          // Test scenarios that might trigger unhandled exceptions
+          testCases.push({
+            id: `test-${index + 1}`,
+            name: "Unhandled Exception Test - Invalid Input",
+            issue: issue.type,
+            severity: issue.severity || "high",
+            fetchCommand: {
+              url: `${baseUrl}${route}`,
+              method: "GET",
+              params: { invalid: "data" },
+              expectedBehavior: "Should catch and handle exceptions gracefully instead of crashing",
+            },
+            curlCommand: `curl "${baseUrl}${route}?invalid=data"`,
+          });
+          testCases.push({
+            id: `test-${index + 1}b`,
+            name: "Unhandled Exception Test - Missing Required Fields",
+            issue: issue.type,
+            severity: issue.severity || "high",
+            fetchCommand: {
+              url: `${baseUrl}${route}`,
+              method: "GET",
+              params: {},
+              expectedBehavior: "Should handle missing required parameters without unhandled exceptions",
+            },
+            curlCommand: `curl "${baseUrl}${route}"`,
           });
           break;
 
@@ -670,6 +735,35 @@ export const testExecutorTool = createTool({
             testResult.analysis =
               "🔴 ISSUE CONFIRMED: API accepts invalid input";
           }
+        } else if (testCase.issue === "unhandled-exceptions") {
+          // Check for unhandled exceptions (500 errors or exception traces)
+          const responseText = typeof responseBody === "string" ? responseBody : JSON.stringify(responseBody);
+          const hasExceptionTrace = 
+            responseText.includes("Traceback") ||
+            responseText.includes("Exception:") ||
+            responseText.includes("Error:") ||
+            responseText.includes("at ") ||
+            responseText.includes("stack trace");
+          
+          if (response.status === 500 && hasExceptionTrace) {
+            testResult.passed = false;
+            testResult.analysis = "🔴 ISSUE CONFIRMED: Unhandled exception detected - API returns 500 with exception trace";
+          } else if (response.status === 500) {
+            testResult.passed = false;
+            testResult.analysis = "🔴 ISSUE CONFIRMED: Unhandled exception detected - API returns 500 error";
+          } else if (response.status >= 400 && response.status < 500) {
+            testResult.passed = true;
+            testResult.analysis = "✅ PASS: API handles exceptions gracefully (returns proper error response)";
+          } else {
+            testResult.passed = true;
+            testResult.analysis = "✅ PASS: No unhandled exceptions detected";
+          }
+        } else if (testCase.issue === "missing-error-handling") {
+          testResult.passed = response.status < 500;
+          testResult.analysis =
+            response.status < 500
+              ? "✅ PASS: No server error detected"
+              : "🔴 ISSUE CONFIRMED: Server error occurred (may indicate missing error handling)";
         } else {
           testResult.passed = response.status < 500;
           testResult.analysis =
