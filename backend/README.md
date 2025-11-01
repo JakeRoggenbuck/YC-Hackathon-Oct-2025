@@ -1,3 +1,4 @@
+=======
 # Backend - Agent Manager
 
 FastAPI service that manages agent lifecycle and handles email summaries for API testing results.
@@ -16,8 +17,15 @@ The backend serves as the orchestration layer between the frontend UI and the te
 ## Getting Started
 
 ```bash
+# Create and run the virtual environment
+python -m venv venv
+source venv/bin/activate  # On Linux/Mac
+
 # Install dependencies
 pip install -r requirements.txt
+
+# For puller.py file since it uses GitHub API and is rate limited
+Generate a Github Personal Access Token with public_repo scope for more Github API requests - 5,000 per hour after adding access token.
 
 # Run the server
 python main.py
@@ -208,3 +216,4 @@ curl -X POST http://localhost:8000/start-agent \
 - `200` - Success
 - `422` - Validation Error (invalid email, missing fields, etc.)
 - `500` - Internal Server Error
+>>>>>>> main

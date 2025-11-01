@@ -61,5 +61,8 @@ They will use the provided API url and look for a openapi.json to know what rout
 
 The semantic search with the source aware GitHub pulling. If we want to test an endpoint called "/test", we can use either Moss or Convex to pull up the relevant code to augment our result.
 
+#### Engineering Notes
+- Max of 500 .py files in Moss agent for now, can be scaled later but kept at a respectable size right now to minimize system latency.
+
 <img width="721" height="738" alt="image" src="https://github.com/user-attachments/assets/adc30cd0-29e2-416f-840c-129bc9b849be" />
 
