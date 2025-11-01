@@ -3,10 +3,20 @@ from pydantic import BaseModel, EmailStr
 
 app = FastAPI()
 
+
 class StartAgentRequest(BaseModel):
     email: EmailStr
     hosted_api_url: str
     github_repo: str
+
+
+@app.get("/broken-route/{x}")
+def broken_route(x: int):
+    if x > 1000:
+        # THIS IS AN ERROR!!
+        raise Exception
+
+    return "Fine"
 
 
 @app.post("/start-agent")
