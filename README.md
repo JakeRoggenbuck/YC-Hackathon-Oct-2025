@@ -13,9 +13,13 @@
 
 We use [Moss](https://www.usemoss.dev/) (Sematic search), [Convex](https://www.convex.dev/) (State for agents), [AgentMail](https://agentmail.to/) (Email updates), [Mastra](https://mastra.ai) (Agents), [Perplexity](https://www.perplexity.ai/) (TODO: Email generation), [Replit](https://replit.com/) (Frontend)
 
+This is our submission for [AgentMail](https://agentmail.to/)'s [HackHalloween](https://events.ycombinator.com/agentmail-yc25) event.
+
 ## Contributors
 
-TODO
+- Ben Nursalim
+- Jake Roggenbuck
+- Rani Saro
 
 ## Design
 
