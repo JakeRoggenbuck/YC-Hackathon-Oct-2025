@@ -90,6 +90,9 @@ When there are no unprocessed:
 
 <img width="662" height="523" alt="image" src="https://github.com/user-attachments/assets/8507acec-7214-454f-9965-e07d0fd23228" />
 
+More info:
+
+<img width="650" height="695" alt="image" src="https://github.com/user-attachments/assets/18096403-497f-446e-b00a-d0becaae4b84" />
 
 #### Engineering Notes
 - Max of 500 .py files in Moss agent for now, can be scaled later but kept at a respectable size right now to minimize system latency.
