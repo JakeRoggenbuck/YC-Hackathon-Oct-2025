@@ -18,6 +18,8 @@ Uses Replit and React JS. Used to configure and start your agents.
 
 Written in Python using FastAPI to start agents when requested from the frontend. Also responsible for running the Email Summary Service.
 
+[BACKEND DOCS](https://github.com/JakeRoggenbuck/YC-Hackathon-Oct-2025/tree/main/backend).
+
 #### 3. Email Summary Service
 
 Send an email summary with Agent Mail. 
