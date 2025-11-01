@@ -1,12 +1,29 @@
 # YC-Hackathon-Oct-2025
 
+[![Python](https://img.shields.io/badge/Python-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org/)
+[![TypeScript](https://img.shields.io/badge/typescript-%23007ACC.svg?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+
+![Static Badge](https://img.shields.io/badge/Convex-orange?style=for-the-badge)
+![Static Badge](https://img.shields.io/badge/Moss-purple?style=for-the-badge)
+![Static Badge](https://img.shields.io/badge/AgentMail-orange?style=for-the-badge)
+![Static Badge](https://img.shields.io/badge/Mastra-purple?style=for-the-badge)
+![Static Badge](https://img.shields.io/badge/Hyperspell-orange?style=for-the-badge)
+
+Agentically scan for bugs in FastAPI backend servers.
+
 ## Contributors
 
 TODO
 
 ## Design
 
+General system design
+
 <img width="3380" height="1902" alt="agentic api bug finder" src="https://github.com/user-attachments/assets/1cd6f365-456f-4bf8-93be-07afba777e67" />
+
+Backend system design
+
+![img_3529](https://github.com/user-attachments/assets/63ea2c70-2147-446b-b826-e6cda80aa182)
 
 ## Components
 
@@ -17,6 +34,20 @@ Uses Replit and React JS. Used to configure and start your agents.
 #### 2. Backend - Agent Manager
 
 Written in Python using FastAPI to start agents when requested from the frontend. Also responsible for running the Email Summary Service.
+
+[Backend Docs](https://github.com/JakeRoggenbuck/YC-Hackathon-Oct-2025/tree/main/backend).
+
+**POST** `/start-agent`
+
+Starts an agent with the provided configuration.
+
+## Request Body
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `email` | string | Yes | Valid email address |
+| `hosted_api_url` | string | Yes | URL of the hosted API |
+| `github_repo` | string | Yes | GitHub repository URL |
 
 #### 3. Email Summary Service
 
@@ -32,3 +63,6 @@ The semantic search with the source aware GitHub pulling. If we want to test an 
 
 #### Engineering Notes
 - Max of 500 .py files in Moss agent for now, can be scaled later but kept at a respectable size right now to minimize system latency.
+
+<img width="721" height="738" alt="image" src="https://github.com/user-attachments/assets/adc30cd0-29e2-416f-840c-129bc9b849be" />
+

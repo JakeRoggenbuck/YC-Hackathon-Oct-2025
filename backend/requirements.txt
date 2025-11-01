@@ -36,3 +36,23 @@ tqdm==4.67.1
 transformers==4.57.1
 typing_extensions==4.15.0
 urllib3==2.5.0
+# LangChain and Google GenAI integration
+langchain-google-genai
+langchain
+langchain-core
+
+# ASGI web server and framework (optional, helpful for local testing)
+fastapi
+uvicorn[standard]
+
+# HTTP clients
+httpx
+requests
+
+# Load environment variables from .env
+python-dotenv
+fastapi
+uvicorn
+
+# Utilities
+agentmail
