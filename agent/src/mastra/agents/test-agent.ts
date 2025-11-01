@@ -1,11 +1,16 @@
-import { Agent } from '@mastra/core/agent';
-import { Memory } from '@mastra/memory';
-import { LibSQLStore } from '@mastra/libsql';
-import { githubCodeTool, codeAnalysisTool, testCaseGeneratorTool, testExecutorTool } from '../tools/api-testing-tool';
-import { scorers } from '../scorers/api-testing-scorer';
+import { Agent } from "@mastra/core/agent";
+import { Memory } from "@mastra/memory";
+import { LibSQLStore } from "@mastra/libsql";
+import {
+  githubCodeTool,
+  codeAnalysisTool,
+  testCaseGeneratorTool,
+  testExecutorTool,
+} from "../tools/api-testing-tool";
+import { scorers } from "../scorers/api-testing-scorer";
 
 export const apiTestingAgent = new Agent({
-  name: 'API Testing Agent',
+  name: "API Testing Agent",
   instructions: `
     You are an expert backend API testing agent that analyzes code for vulnerabilities and generates comprehensive test cases.
     
@@ -30,32 +35,32 @@ export const apiTestingAgent = new Agent({
     
     Always execute tests to confirm issues rather than just reporting potential problems.
   `,
-  model: 'openai/gpt-4o', // Using GPT-4 for better code analysis
+  model: "openai/gpt-4o", // Using GPT-4 for better code analysis
   tools: {
     githubCodeTool,
     codeAnalysisTool,
     testCaseGeneratorTool,
-    testExecutorTool
+    testExecutorTool,
   },
   scorers: {
     issueDetectionAccuracy: {
       scorer: scorers.issueDetectionAccuracyScorer,
       sampling: {
-        type: 'ratio',
+        type: "ratio",
         rate: 1,
       },
     },
     testCoverage: {
       scorer: scorers.testCoverageScorer,
       sampling: {
-        type: 'ratio',
+        type: "ratio",
         rate: 1,
       },
-    }
+    },
   },
   memory: new Memory({
     storage: new LibSQLStore({
-      url: 'file:../mastra.db',
+      url: "file:../mastra.db",
     }),
   }),
 });
