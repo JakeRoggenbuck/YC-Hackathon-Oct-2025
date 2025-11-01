@@ -100,6 +100,10 @@ Final Results:
 
 <img width="684" height="865" alt="image" src="https://github.com/user-attachments/assets/48e03a32-662b-4c1c-83d4-8b6845d42492" />
 
+It then saves that to the database:
+
+<img width="1376" height="503" alt="image" src="https://github.com/user-attachments/assets/d33139f6-1bc2-4a86-8774-a2421652e83f" />
+
 #### Engineering Notes
 - Max of 500 .py files in Moss agent for now, can be scaled later but kept at a respectable size right now to minimize system latency.
 
