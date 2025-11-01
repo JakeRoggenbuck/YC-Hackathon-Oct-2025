@@ -1,5 +1,8 @@
 # YC-Hackathon-Oct-2025
 
+[![Python](https://img.shields.io/badge/Python-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org/)
+[![TypeScript](https://img.shields.io/badge/typescript-%23007ACC.svg?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+
 Agentically scan for bugs in FastAPI backend servers.
 
 ## Contributors
