@@ -13,3 +13,5 @@ requests
 
 # Load environment variables from .env
 python-dotenv
+fastapi
+uvicorn

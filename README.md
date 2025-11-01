@@ -18,13 +18,27 @@ Uses Replit and React JS. Used to configure and start your agents.
 
 Written in Python using FastAPI to start agents when requested from the frontend. Also responsible for running the Email Summary Service.
 
+[Backend Docs](https://github.com/JakeRoggenbuck/YC-Hackathon-Oct-2025/tree/main/backend).
+
+**POST** `/start-agent`
+
+Starts an agent with the provided configuration.
+
+## Request Body
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `email` | string | Yes | Valid email address |
+| `hosted_api_url` | string | Yes | URL of the hosted API |
+| `github_repo` | string | Yes | GitHub repository URL |
+
 #### 3. Email Summary Service
 
 Send an email summary with Agent Mail. 
 
 #### 4. The Agents
 
-We will use Mastral to write our agents. They will use Moss, Convex, and Hyperspell for their searching and memory.
+We will use [Mastra](https://mastra.ai) to write our agents. They will use [Moss](https://www.usemoss.dev/), Convex, and Hyperspell for their searching and memory.
 
 They will use the provided API url and look for a openapi.json to know what routes to call. It can remember this with Hyperspell.
 
