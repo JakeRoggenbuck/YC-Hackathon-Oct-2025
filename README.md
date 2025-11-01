@@ -80,3 +80,6 @@ The semantic search with the source aware GitHub pulling. If we want to test an 
 
 <img width="721" height="738" alt="image" src="https://github.com/user-attachments/assets/adc30cd0-29e2-416f-840c-129bc9b849be" />
 
+<img width="1440" height="775" alt="Screenshot 2025-11-01 at 10 28 21 AM" src="https://github.com/user-attachments/assets/dde7b0ba-3dc0-44a4-9d06-afa4c443b8b7" />
+
+
