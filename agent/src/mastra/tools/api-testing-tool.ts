@@ -272,7 +272,7 @@ export const githubCodeTool = createTool({
 export const codeAnalysisTool = createTool({
   id: "code-analyzer",
   description:
-    "Analyzes code for potential backend API issues like divide-by-zero, null references, unhandled errors, etc.",
+    "Analyzes code for potential backend API issues. Only detects actual issues in the code - does not infer or assume issues exist. Returns an empty issues array if no issues are found.",
   inputSchema: z.object({
     code: z.string().describe("The source code to analyze"),
     route: z.string().describe("The API route being analyzed"),
@@ -301,63 +301,136 @@ export const codeAnalysisTool = createTool({
       code?: string;
     }> = [];
 
-    // Detect divide-by-zero vulnerabilities
+    // Detect divide-by-zero vulnerabilities - only in actual mathematical operations
+    // Look for patterns like: variable / divisor, number / variable, etc.
+    // Exclude string literals, regex patterns, and route paths
+    
+    // Remove comments and string literals from analysis to avoid false positives
+    const codeWithoutStrings = code
+      .replace(/\/\/.*$/gm, '') // Remove single-line comments
+      .replace(/\/\*[\s\S]*?\*\//g, '') // Remove multi-line comments
+      .replace(/"[^"]*"/g, '""') // Replace string literals with empty strings
+      .replace(/'[^']*'/g, "''"); // Replace single-quoted strings
+
+    // Only match division operations with variables/expressions on both sides
+    // Pattern: something / variable (where something is a number, variable, or expression)
     const divisionPatterns = [
-      /\/\s*([a-zA-Z_][a-zA-Z0-9_]*)/g, // Simple division by variable
-      /\/\s*\(([^)]+)\)/g, // Division by expression
-      /\/\s*req\.(query|params|body)\.([a-zA-Z0-9_]+)/g, // Division by request params
+      // Match: variable / variable, number / variable, expression / variable
+      /([a-zA-Z_][a-zA-Z0-9_]*|\)|\d+)\s*\/\s*([a-zA-Z_][a-zA-Z0-9_]*)/g,
+      // Match: something / req.query/params/body.field
+      /([a-zA-Z_][a-zA-Z0-9_]*|\)|\d+)\s*\/\s*req\.(query|params|body)\.([a-zA-Z0-9_]+)/g,
     ];
 
+    const foundVariables = new Set<string>();
+
     divisionPatterns.forEach((pattern) => {
-      const matches = [...code.matchAll(pattern)];
+      const matches = [...codeWithoutStrings.matchAll(pattern)];
       matches.forEach((match) => {
-        const variable = match[1] || match[2];
-        if (
-          variable &&
-          !code.includes(`${variable} === 0`) &&
-          !code.includes(`${variable} !== 0`)
-        ) {
-          issues.push({
-            type: "divide-by-zero",
-            severity: "high",
-            description: `Potential divide-by-zero error with variable: ${variable}`,
-            variable,
-            code: match[0],
-          });
+        // Get the divisor (right side of division)
+        const variable = match[2] || match[3];
+        const fullMatch = match[0];
+        
+        // Skip if this is clearly not a division operation (e.g., route paths, regex)
+        if (fullMatch.includes('"/') || fullMatch.includes("'/") || fullMatch.includes('/g')) {
+          return;
+        }
+        
+        if (variable && !foundVariables.has(variable)) {
+          // Check if there's any validation or check for this variable
+          const hasZeroCheck = 
+            code.includes(`${variable} === 0`) ||
+            code.includes(`${variable} !== 0`) ||
+            code.includes(`${variable} == 0`) ||
+            code.includes(`${variable} != 0`) ||
+            code.includes(`if (${variable}`) ||
+            code.includes(`if(${variable}`) ||
+            code.includes(`&& ${variable}`) ||
+            code.includes(`|| ${variable}`);
+          
+          // Only flag if no zero check exists and it's not a common safe variable name
+          const isLikelyDivisor = !['id', 'type', 'name', 'key', 'value', 'path', 'url', 'route'].includes(variable.toLowerCase());
+          
+          if (!hasZeroCheck && isLikelyDivisor) {
+            foundVariables.add(variable);
+            issues.push({
+              type: "divide-by-zero",
+              severity: "high",
+              description: `Potential divide-by-zero error: division by variable "${variable}" without zero check`,
+              variable,
+              code: fullMatch.trim(),
+            });
+          }
         }
       });
     });
 
-    // Detect unvalidated input
-    if (
-      code.includes("req.query") ||
-      code.includes("req.params") ||
-      code.includes("req.body")
-    ) {
+    // Detect unvalidated input - be more conservative
+    // Only flag if there's direct use of user input in operations without validation
+    const hasUserInput = 
+      code.includes("req.query") || 
+      code.includes("req.params") || 
+      code.includes("req.body");
+    
+    if (hasUserInput) {
+      // Check for various validation patterns
       const hasValidation =
         code.includes("validate") ||
         code.includes("schema") ||
+        code.includes("zod") ||
+        code.includes("yup") ||
+        code.includes("joi") ||
         code.includes("parseInt") ||
-        code.includes("parseFloat");
-      if (!hasValidation) {
+        code.includes("parseFloat") ||
+        code.includes("Number(") ||
+        code.includes("parseInt(") ||
+        code.includes("isNaN") ||
+        code.includes("typeof") ||
+        code.includes("instanceof");
+      
+      // Only flag if input is used in potentially dangerous operations without validation
+      const hasUnsafeOperations = 
+        code.match(/req\.(query|params|body)\.[a-zA-Z0-9_]+/g)?.some(match => {
+          const varName = match.split('.').pop();
+          return varName && (
+            code.includes(`${varName} /`) ||
+            code.includes(`/ ${varName}`) ||
+            code.includes(`eval(`) ||
+            code.includes(`exec(`)
+          );
+        }) || false;
+      
+      if (hasUnsafeOperations && !hasValidation) {
         issues.push({
           type: "unvalidated-input",
           severity: "medium",
-          description: "API route accepts input without apparent validation",
+          description: "User input used in operations without apparent validation",
         });
       }
     }
 
-    // Detect missing error handling
+    // Detect missing error handling - be more conservative
+    // Only flag if there are operations that could throw errors without handling
+    const hasAsyncOperations = 
+      code.includes("async") || 
+      code.includes("await") || 
+      code.includes("Promise") ||
+      code.includes(".then(") ||
+      code.includes("fetch(") ||
+      code.includes("axios") ||
+      code.includes("database") ||
+      code.includes("db.");
+    
     const hasErrorHandling =
       code.includes("try") ||
       code.includes("catch") ||
       code.includes(".catch(");
-    if (!hasErrorHandling) {
+    
+    // Only flag missing error handling if there are operations that could fail
+    if (hasAsyncOperations && !hasErrorHandling) {
       issues.push({
         type: "missing-error-handling",
         severity: "medium",
-        description: "No error handling detected in route",
+        description: "Async operations detected without error handling",
       });
     }
 
@@ -373,7 +446,7 @@ export const codeAnalysisTool = createTool({
 // Tool to generate test cases
 export const testCaseGeneratorTool = createTool({
   id: "test-case-generator",
-  description: "Generates fetch commands to test discovered issues in the API",
+  description: "Generates fetch commands to test discovered issues in the API. Only generates tests for issues that were actually detected by the code analyzer. Returns empty test cases array if no valid issues are provided.",
   inputSchema: z.object({
     baseUrl: z
       .string()
@@ -401,15 +474,33 @@ export const testCaseGeneratorTool = createTool({
       curlCommand: string;
     }> = [];
 
+    // Only generate tests if we have valid issues
+    if (!issues || !Array.isArray(issues) || issues.length === 0) {
+      return {
+        testCasesGenerated: 0,
+        testCases: [],
+      };
+    }
+
     issues.forEach((issue: any, index: number) => {
+      // Ensure issue has required fields
+      if (!issue || !issue.type) {
+        return;
+      }
+
       switch (issue.type) {
         case "divide-by-zero":
+          // Only generate tests if variable is specified and valid
+          if (!issue.variable || typeof issue.variable !== "string") {
+            return; // Skip invalid divide-by-zero issues
+          }
+
           // Generate test cases for divide by zero
           testCases.push({
             id: `test-${index + 1}`,
             name: `Divide by Zero Test - ${issue.variable}`,
             issue: issue.type,
-            severity: issue.severity,
+            severity: issue.severity || "high",
             fetchCommand: {
               url: `${baseUrl}${route}`,
               method: "GET",
@@ -425,7 +516,7 @@ export const testCaseGeneratorTool = createTool({
             id: `test-${index + 1}b`,
             name: `Divide by Very Small Number - ${issue.variable}`,
             issue: issue.type,
-            severity: issue.severity,
+            severity: issue.severity || "high",
             fetchCommand: {
               url: `${baseUrl}${route}`,
               method: "GET",

@@ -34,10 +34,15 @@ export const apiTestingAgent = new Agent({
     When responding:
     - If you encounter "Not Found" errors, use github-repository-explorer to explore the repository structure first
     - Be specific about the issues found and their severity
-    - Generate practical test cases that will actually uncover the issues
+    - ONLY report issues that are actually found by the code analyzer - do not hallucinate or infer issues that aren't in the analysis results
+    - ONLY generate test cases for issues that were actually detected by the code analyzer
+    - If no issues are found, clearly state that no issues were detected rather than generating hypothetical tests
+    - Generate practical test cases that will actually uncover the real issues detected
     - Provide clear curl commands and fetch examples
     - Give actionable feedback on how to fix confirmed issues
     - Present results in a clear, structured format
+    - DO NOT create test cases for divide-by-zero errors unless the code analyzer explicitly detected a division operation with an unvalidated variable
+    - DO NOT assume errors exist - only work with what the tools actually detect
     
     Always execute tests to confirm issues rather than just reporting potential problems.
   `,
