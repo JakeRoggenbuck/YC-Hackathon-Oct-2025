@@ -3,24 +3,43 @@ Moss Indexer for Semantic Code Search
 
 Indexes GitHub repositories and provides semantic search over source code.
 
-Usage:
-    # Index a repository
-    python moss_indexer.py index https://github.com/owner/repo
-    
-    # Search indexed code
-    python moss_indexer.py search owner-repo "your search query"
-    
-    # Index and search in one command
-    python moss_indexer.py search-repo https://github.com/owner/repo "query"
+QUICK START GUIDE:
+==================
 
-    #Example commands:
-        python moss_indexer.py search testdrivenio-fastapi-crud-async "POST endpoint validation"
+Step 1: Set up credentials in .env file
+    MOSS_PROJECT_ID="your-project-id"
+    MOSS_API_KEY="your-api-key"
+    GITHUB_TOKEN="your-github-token"  (for higher rate limits)
+
+Step 2: Index a repository (run first for each repo)
+    python moss_indexer.py index https://github.com/testdrivenio/fastapi-crud-async
+
+Step 3: Search the indexed code (use same GitHub URL)
+    python moss_indexer.py search https://github.com/testdrivenio/fastapi-crud-async "error handling"
+    python moss_indexer.py search https://github.com/testdrivenio/fastapi-crud-async "POST endpoint"
+    python moss_indexer.py search https://github.com/testdrivenio/fastapi-crud-async "Pydantic models"
+
+Step 4 (Optional): List all indexed repositories
+    python moss_indexer.py list
+
+EXAMPLE WORKFLOW:
+=================
+    # Index a FastAPI project
+    python moss_indexer.py index https://github.com/testdrivenio/fastapi-crud-async
+    
+    # Search multiple times using the same URL
+    python moss_indexer.py search https://github.com/testdrivenio/fastapi-crud-async "POST validation"
+    python moss_indexer.py search https://github.com/testdrivenio/fastapi-crud-async "404 errors"
+    python moss_indexer.py search https://github.com/testdrivenio/fastapi-crud-async "database queries"
+    
+    # List all indexed repos
+    python moss_indexer.py list
+
 
 Functions:
-    index_github_repo() - Pull, chunk, and index a GitHub repository
-    search_code() - Semantic search over indexed code
-    create_moss_index() - Create Moss index from chunks
-    load_moss_index() - Load index into memory
+    index_github_repo(url) - Pull, chunk, and index a GitHub repository
+    search_code(url, query) - Semantic search 
+    list_indexes() - List all indexed repositories
 """
 
 import os
@@ -68,6 +87,28 @@ def _generate_index_name(github_url: str) -> str:
     index_name = f"{owner}-{repo}".lower()
     index_name = ''.join(c if c.isalnum() or c == '-' else '-' for c in index_name)
     return index_name
+
+
+def _normalize_index_identifier(identifier: str) -> str:
+    """
+    Normalize an identifier to an index name.
+    
+    Accepts either:
+    - GitHub URL: https://github.com/owner/repo
+    - Index name: owner-repo
+    
+    Returns the index name in both cases.
+    """
+    # Check if it looks like a GitHub URL
+    if 'github.com' in identifier or '/' in identifier:
+        try:
+            return _generate_index_name(identifier)
+        except ValueError:
+            # If parsing fails, assume it's already an index name
+            return identifier
+    
+    # Already an index name
+    return identifier
 
 
 async def create_moss_index(
@@ -128,7 +169,7 @@ async def load_moss_index(index_name: str) -> bool:
 
 
 async def search_code(
-    index_name: str,
+    index_identifier: str,
     query: str,
     top_k: int = 5,
     auto_load: bool = True
@@ -136,8 +177,24 @@ async def search_code(
     """
     Search for code using semantic similarity.
     
-    Returns list of dicts with 'id', 'text', and 'score' keys.
+    Args:
+        index_identifier: GitHub URL (e.g., https://github.com/owner/repo)
+        query: Natural language search query
+        top_k: Number of results to return (default: 5)
+        auto_load: Automatically load index if needed (default: True)
+    
+    Returns:
+        List of dicts with 'id', 'text', and 'score' keys
+    
+    Example:
+        results = await search_code(
+            "https://github.com/pallets/flask",
+            "How to handle POST requests?"
+        )
     """
+    # Normalize URL to index name internally
+    index_name = _normalize_index_identifier(index_identifier)
+    
     client = _get_moss_client()
     
     logger.info(f"Searching index '{index_name}' for: '{query}'")
@@ -171,6 +228,23 @@ async def search_code(
     except Exception as e:
         logger.error(f"Search failed: {e}")
         raise RuntimeError(f"Moss search failed: {e}")
+
+
+async def list_indexes() -> List[str]:
+    """
+    List all indexed repositories.
+    
+    Returns list of index names (format: owner-repo).
+    """
+    client = _get_moss_client()
+    
+    try:
+        indexes = await client.list_indexes()
+        logger.info(f"Found {len(indexes)} indexed repositories")
+        return indexes
+    except Exception as e:
+        logger.error(f"Failed to list indexes: {e}")
+        raise RuntimeError(f"Failed to list indexes: {e}")
 
 
 async def index_github_repo(
@@ -244,13 +318,15 @@ if __name__ == "__main__":
         if len(sys.argv) < 2:
             print("Usage: python moss_indexer.py <command> [args...]")
             print("\nCommands:")
-            print("  index <github_url>                    - Index a repository")
-            print("  search <index_name> <query>           - Search an indexed repo")
-            print("  search-repo <github_url> <query>      - Index and search in one go")
+            print("  index <github_url>              - Index a repository")
+            print("  search <github_url> <query>     - Search indexed repo")
+            print("  search-repo <github_url> <query> - Index and search in one go")
+            print("  list                            - List all indexed repos")
             print("\nExamples:")
             print("  python moss_indexer.py index https://github.com/pallets/flask")
-            print("  python moss_indexer.py search pallets-flask 'How to create routes?'")
-            print("  python moss_indexer.py search-repo https://github.com/pallets/flask 'POST handler'")
+            print("  python moss_indexer.py search https://github.com/pallets/flask 'create routes'")
+            print("  python moss_indexer.py search https://github.com/pallets/flask 'POST handler'")
+            print("  python moss_indexer.py list")
             sys.exit(1)
         
         command = sys.argv[1]
@@ -264,16 +340,39 @@ if __name__ == "__main__":
                 github_url = sys.argv[2]
                 index_name = await index_github_repo(github_url)
                 print(f"\nSuccess! Index created: {index_name}")
+                print(f"You can now search using:")
+                print(f"  python moss_indexer.py search {index_name} 'your query'")
+                print(f"  OR")
+                print(f"  python moss_indexer.py search {github_url} 'your query'")
+                
+            elif command == "list":
+                indexes = await list_indexes()
+                
+                if not indexes:
+                    print("\nNo indexed repositories found.")
+                    print("Use 'python moss_indexer.py index <github_url>' to index a repository.")
+                else:
+                    print(f"\nIndexed Repositories ({len(indexes)}):")
+                    print("-" * 60)
+                    for i, index_info in enumerate(indexes, 1):
+                        # Extract index name from IndexInfo object
+                        index_name = getattr(index_info, 'name', str(index_info))
+                        # Try to reverse engineer the GitHub URL from index name
+                        parts = index_name.replace('-', '/', 1)  # Replace first dash with /
+                        github_url = f"https://github.com/{parts}"
+                        print(f"{i}. {index_name}")
+                        print(f"   Estimated URL: {github_url}")
+                        print()
                 
             elif command == "search":
                 if len(sys.argv) < 4:
-                    print("Error: Please provide index name and query")
+                    print("Error: Please provide GitHub URL and query")
                     sys.exit(1)
                 
-                index_name = sys.argv[2]
+                index_identifier = sys.argv[2]  # GitHub URL
                 query = sys.argv[3]
                 
-                results = await search_code(index_name, query)
+                results = await search_code(index_identifier, query)
                 
                 print(f"\nSearch results for: '{query}'")
                 print(f"Found {len(results)} matches\n")
