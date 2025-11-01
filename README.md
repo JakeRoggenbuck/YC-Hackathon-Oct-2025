@@ -25,6 +25,10 @@ Backend system design
 
 ![img_3529](https://github.com/user-attachments/assets/63ea2c70-2147-446b-b826-e6cda80aa182)
 
+More components
+
+<img width="1410" height="764" alt="image" src="https://github.com/user-attachments/assets/1ac0764f-8e39-49af-9697-6b6539c23078" />
+
 ## Components
 
 #### 1. Frontend - Command and Control
