@@ -1,11 +1,144 @@
 import { createTool } from "@mastra/core/tools";
 import { z } from "zod";
 
+// Helper function to create GitHub API headers
+const getGitHubHeaders = (token?: string) => {
+  const headers: Record<string, string> = {
+    Accept: "application/vnd.github.v3.raw",
+    "User-Agent": "Mastra-API-Testing-Agent",
+  };
+  if (token) {
+    // GitHub API accepts both "token" and "Bearer" prefixes for personal access tokens
+    // Use the token as-is if it already has a prefix, otherwise add "token" prefix
+    headers.Authorization = token.startsWith("Bearer ") || token.startsWith("token ")
+      ? token
+      : `token ${token}`;
+  }
+  return headers;
+};
+
+// Tool to list repository contents
+export const githubRepositoryExplorerTool = createTool({
+  id: "github-repository-explorer",
+  description:
+    "Lists the contents of a GitHub repository directory to help find route files. Use this when you don't know the exact file path.",
+  inputSchema: z.object({
+    repoOwner: z.string().describe("GitHub repository owner/organization"),
+    repoName: z.string().describe("GitHub repository name"),
+    directoryPath: z
+      .string()
+      .optional()
+      .describe(
+        "Directory path to explore (e.g., src/routes). Leave empty for root directory.",
+      ),
+    githubToken: z
+      .string()
+      .optional()
+      .describe(
+        "Optional GitHub personal access token for private repositories",
+      ),
+  }),
+  outputSchema: z.object({
+    success: z.boolean(),
+    path: z.string().optional(),
+    files: z
+      .array(
+        z.object({
+          name: z.string(),
+          type: z.string(),
+          path: z.string(),
+          size: z.number().optional(),
+        }),
+      )
+      .optional(),
+    error: z.string().optional(),
+    suggestions: z.array(z.string()).optional(),
+  }),
+  execute: async ({ context }) => {
+    const { repoOwner, repoName, directoryPath = "", githubToken } = context;
+
+    try {
+      const url = `https://api.github.com/repos/${repoOwner}/${repoName}/contents/${directoryPath}`;
+      const response = await fetch(url, {
+        headers: getGitHubHeaders(githubToken),
+      });
+
+      if (response.status === 404) {
+        return {
+          success: false,
+          error: `Repository or path not found. The repository might be private (requires authentication), the path might be incorrect, or the repository doesn't exist.`,
+          suggestions: [
+            "Check if the repository name and owner are correct",
+            "If the repository is private, provide a GitHub token",
+            "Try exploring the root directory first (empty directoryPath)",
+          ],
+        };
+      }
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`GitHub API error (${response.status}): ${errorText}`);
+      }
+
+      const contents = await response.json();
+
+      // Handle both single file and directory responses
+      const files = Array.isArray(contents)
+        ? contents.map((item: any) => ({
+            name: item.name,
+            type: item.type,
+            path: item.path,
+            size: item.size,
+          }))
+        : [
+            {
+              name: contents.name,
+              type: contents.type,
+              path: contents.path,
+              size: contents.size,
+            },
+          ];
+
+      // Suggest route-related files
+      const suggestions: string[] = [];
+      const routeFiles = files.filter(
+        (f) =>
+          f.type === "file" &&
+          (f.name.includes("route") ||
+            f.name.includes("api") ||
+            f.path.includes("routes") ||
+            f.path.includes("api")),
+      );
+      if (routeFiles.length > 0) {
+        suggestions.push(
+          `Found potential route files: ${routeFiles.map((f) => f.path).join(", ")}`,
+        );
+      }
+
+      return {
+        success: true,
+        path: directoryPath || "/",
+        files,
+        suggestions,
+      };
+    } catch (error: any) {
+      return {
+        success: false,
+        error: error.message || "Unknown error",
+        suggestions: [
+          "Verify repository owner and name are correct",
+          "Check if repository is private and requires authentication",
+        ],
+      };
+    }
+  },
+});
+
 // Tool to fetch GitHub code for a specific route
 export const githubCodeTool = createTool({
   id: "github-code-fetcher",
   description:
-    "Fetches source code from a GitHub repository for a specific API route",
+    "Fetches source code from a GitHub repository for a specific API route. If the file is not found, try using github-repository-explorer to find the correct path.",
   inputSchema: z.object({
     repoOwner: z.string().describe("GitHub repository owner/organization"),
     repoName: z.string().describe("GitHub repository name"),
@@ -15,6 +148,12 @@ export const githubCodeTool = createTool({
         "Path to the file containing the route (e.g., src/routes/test.ts)",
       ),
     route: z.string().describe("The API route to analyze (e.g., /test)"),
+    githubToken: z
+      .string()
+      .optional()
+      .describe(
+        "Optional GitHub personal access token for private repositories",
+      ),
   }),
   outputSchema: z.object({
     success: z.boolean(),
@@ -23,22 +162,49 @@ export const githubCodeTool = createTool({
     route: z.string().optional(),
     analysis: z.string().optional(),
     error: z.string().optional(),
+    suggestions: z.array(z.string()).optional(),
   }),
   execute: async ({ context }) => {
-    const { repoOwner, repoName, filePath, route } = context;
+    const { repoOwner, repoName, filePath, route, githubToken } = context;
 
     try {
       // Fetch file content from GitHub API
       const url = `https://api.github.com/repos/${repoOwner}/${repoName}/contents/${filePath}`;
       const response = await fetch(url, {
-        headers: {
-          Accept: "application/vnd.github.v3.raw",
-          "User-Agent": "Mastra-API-Testing-Agent",
-        },
+        headers: getGitHubHeaders(githubToken),
       });
 
+      if (response.status === 404) {
+        return {
+          success: false,
+          error: `File not found: ${filePath}`,
+          code: null,
+          suggestions: [
+            `The file path "${filePath}" was not found in the repository.`,
+            `Try using github-repository-explorer to list repository contents and find the correct file path.`,
+            "Common paths to check: src/routes, app/routes, routes, api, src/api",
+            "If the repository is private, provide a GitHub token via the githubToken parameter",
+          ],
+        };
+      }
+
+      if (response.status === 403) {
+        return {
+          success: false,
+          error: "Access forbidden. Repository may be private.",
+          code: null,
+          suggestions: [
+            "This repository appears to be private. Provide a GitHub personal access token via the githubToken parameter.",
+            "Create a token at: https://github.com/settings/tokens",
+          ],
+        };
+      }
+
       if (!response.ok) {
-        throw new Error(`GitHub API error: ${response.statusText}`);
+        const errorText = await response.text();
+        throw new Error(
+          `GitHub API error (${response.status}): ${response.statusText}. ${errorText}`,
+        );
       }
 
       const code = await response.text();
@@ -55,6 +221,11 @@ export const githubCodeTool = createTool({
         success: false,
         error: error.message || "Unknown error",
         code: null,
+        suggestions: [
+          "Verify the repository owner, name, and file path are correct",
+          "Try using github-repository-explorer to explore the repository structure",
+          "If the repository is private, provide a GitHub token",
+        ],
       };
     }
   },

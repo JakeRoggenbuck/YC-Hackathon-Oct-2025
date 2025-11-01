@@ -4,7 +4,14 @@ import { z } from "zod";
 export const issueDetectionAccuracyScorer = createScorer({
   name: "Issue Detection Accuracy",
   description: "Evaluates how accurately the agent detects real issues",
-  type: "code",
+  type: "agent",
+  judge: {
+    model: "openai/gpt-4o-mini",
+    instructions:
+      "You are an expert evaluator of API testing accuracy. " +
+      "Analyze the agent's output to extract metrics about detected and confirmed issues. " +
+      "Return only the structured JSON matching the provided schema.",
+  },
 })
   .analyze({
     description: "Extract issue detection metrics from the output",
@@ -45,7 +52,14 @@ Return JSON with detectedIssues and confirmedIssues fields.`;
 export const testCoverageScorer = createScorer({
   name: "Test Coverage",
   description: "Evaluates test case coverage of detected issues",
-  type: "code",
+  type: "agent",
+  judge: {
+    model: "openai/gpt-4o-mini",
+    instructions:
+      "You are an expert evaluator of test coverage. " +
+      "Analyze the agent's output to extract metrics about issues found and test cases generated. " +
+      "Return only the structured JSON matching the provided schema.",
+  },
 })
   .analyze({
     description: "Extract test coverage metrics from the output",
