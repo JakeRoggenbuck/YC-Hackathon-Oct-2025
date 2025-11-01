@@ -11,7 +11,7 @@
 ![Static Badge](https://img.shields.io/badge/Mastra-purple?style=for-the-badge)
 ![Static Badge](https://img.shields.io/badge/Hyperspell-orange?style=for-the-badge)
 
-We use [Moss](https://www.usemoss.dev/) (Sematic search), [Convex](https://www.convex.dev/) (State for agents), [AgentMail](https://agentmail.to/) (Email updates), [Mastra](https://mastra.ai) (Agents), [Perplexity](https://www.perplexity.ai/) (TODO: Email generation), [Replit](https://replit.com/) (Frontend)
+We use [Moss](https://www.usemoss.dev/) (Sematic search), [Convex](https://www.convex.dev/) (State for agents), [AgentMail](https://agentmail.to/) (Email updates), [Mastra](https://mastra.ai) (Agents), [Perplexity](https://www.perplexity.ai/) (Email generation), [Replit](https://replit.com/) (Frontend)
 
 This is our submission for [AgentMail](https://agentmail.to/)'s [HackHalloween](https://events.ycombinator.com/agentmail-yc25) event.
 
