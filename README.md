@@ -11,11 +11,15 @@
 ![Static Badge](https://img.shields.io/badge/Mastra-purple?style=for-the-badge)
 ![Static Badge](https://img.shields.io/badge/Hyperspell-orange?style=for-the-badge)
 
-We use [Moss](https://www.usemoss.dev/) (Sematic search), [Convex](https://www.convex.dev/) (State for agents), [AgentMail](https://agentmail.to/) (Email updates), [Mastra](https://mastra.ai) (Agents), [Perplexity](https://www.perplexity.ai/) (TODO: Email generation), [Replit](https://replit.com/) (Frontend)
+We use [Moss](https://www.usemoss.dev/) (Sematic search), [Convex](https://www.convex.dev/) (State for agents), [AgentMail](https://agentmail.to/) (Email updates), [Mastra](https://mastra.ai) (Agents), [Perplexity](https://www.perplexity.ai/) (Email generation), [Replit](https://replit.com/) (Frontend)
+
+This is our submission for [AgentMail](https://agentmail.to/)'s [HackHalloween](https://events.ycombinator.com/agentmail-yc25) event.
 
 ## Contributors
 
-TODO
+- Ben Nursalim
+- Jake Roggenbuck
+- Rani Saro
 
 ## Design
 
@@ -23,9 +27,10 @@ General system design
 
 <img width="3380" height="1902" alt="agentic api bug finder" src="https://github.com/user-attachments/assets/1cd6f365-456f-4bf8-93be-07afba777e67" />
 
+<!-- 
 Backend system design
 
-![img_3529](https://github.com/user-attachments/assets/63ea2c70-2147-446b-b826-e6cda80aa182)
+![img_3529](https://github.com/user-attachments/assets/63ea2c70-2147-446b-b826-e6cda80aa182) -->
 
 More components
 
@@ -74,6 +79,20 @@ We will use [Mastra](https://mastra.ai) to write our agents. They will use [Moss
 They will use the provided API url and look for a openapi.json to know what routes to call. It can remember this with Hyperspell.
 
 The semantic search with the source aware GitHub pulling. If we want to test an endpoint called "/test", we can use either Moss or Convex to pull up the relevant code to augment our result.
+
+The agent can pull unprocessed agent start requests
+
+<img width="621" height="764" alt="image" src="https://github.com/user-attachments/assets/5d079855-dcf6-4135-a041-4de8f2dbf777" />
+
+<img width="594" height="720" alt="image" src="https://github.com/user-attachments/assets/5f81e115-5971-4f40-92e2-203778b2fcc0" />
+
+When there are no unprocessed:
+
+<img width="662" height="523" alt="image" src="https://github.com/user-attachments/assets/8507acec-7214-454f-9965-e07d0fd23228" />
+
+More info:
+
+<img width="650" height="695" alt="image" src="https://github.com/user-attachments/assets/18096403-497f-446e-b00a-d0becaae4b84" />
 
 #### Engineering Notes
 - Max of 500 .py files in Moss agent for now, can be scaled later but kept at a respectable size right now to minimize system latency.

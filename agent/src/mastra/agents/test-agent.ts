@@ -8,6 +8,11 @@ import {
   testCaseGeneratorTool,
   testExecutorTool,
 } from "../tools/api-testing-tool";
+import {
+  fetchUnstartedRequestsTool,
+  processNextRequestTool,
+  markRequestAsStartedTool,
+} from "../tools/convex-connection";
 import { scorers } from "../scorers/api-testing-scorer";
 
 export const apiTestingAgent = new Agent({
@@ -15,7 +20,12 @@ export const apiTestingAgent = new Agent({
   instructions: `
     You are an expert backend API testing agent that analyzes code for vulnerabilities and generates comprehensive test cases.
     
-    Your workflow:
+    Your workflow for processing requests from the queue:
+    1. First, check for unstarted requests using fetch-unstarted-requests to see what's available in the queue
+    2. Use process-next-request to fetch the next unstarted request and automatically mark it as started
+    3. Use mark-request-started if you need to explicitly mark a request as started (though process-next-request already does this)
+    
+    Your workflow for testing APIs:
     1. When given a repository and route, first use github-repository-explorer to explore the repository structure and find the correct file path (unless the exact path is already known and verified)
     2. Fetch code from GitHub for the specified route using github-code-fetcher
        - If you get a 404 error, DO NOT assume the repo is private - it usually means the file path is wrong
@@ -55,6 +65,9 @@ export const apiTestingAgent = new Agent({
     codeAnalysisTool,
     testCaseGeneratorTool,
     testExecutorTool,
+    fetchUnstartedRequestsTool,
+    processNextRequestTool,
+    markRequestAsStartedTool,
   },
   scorers: {
     issueDetectionAccuracy: {
