@@ -33,18 +33,16 @@ The Recompile Team
         "html": f"""
 <!DOCTYPE html>
 <html>
-<head>
-    <style>
-        body {{ font-family: Arial, sans-serif; line-height: 1.6; color: #333; }}
-        .container {{ max-width: 600px; margin: 0 auto; padding: 20px; }}
-        .header {{ background-color: #4CAF50; color: white; padding: 20px; border-radius: 5px; text-align: center; }}
-        .content {{ background-color: #f9f9f9; padding: 20px; border-radius: 5px; margin-top: 20px; }}
-        .info-box {{ background-color: #e8f5e9; border-left: 4px solid #4CAF50; padding: 15px; margin: 15px 0; }}
-        .footer {{ margin-top: 20px; text-align: center; color: #666; font-size: 12px; }}
-        a {{ color: #4CAF50; text-decoration: none; }}
-        code {{ background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: monospace; }}
-    </style>
-</head>
+<div style="background: #ffffff; border-bottom: 2px solid #e5e5e5; padding: 24px 16px;">
+  <div style="max-width: 600px; margin: 0 auto;">
+    <h1 style="font-size: 28px; font-weight: 700; margin: 0; color: #1a1a1a; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;">
+      Recompile
+    </h1>
+    <p style="font-size: 13px; color: #666; font-weight: 500; margin: 4px 0 0 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;">
+      API Error Detection Report
+    </p>
+  </div>
+</div>
 <body>
     <div class="container">
         <div class="header">
@@ -86,7 +84,7 @@ if __name__ == "__main__":
         github_repo: str
 
     request = RequestMock()
-    request.email = "me@jr0.org"
+    request.email = "benedictnursalim@gmail.com"
     request.github_repo = "https://github.com/JakeRoggenbuck/algoboard"
     request.hosted_api_url = "https://api.algoboard.org"
 
