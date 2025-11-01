@@ -1,3 +1,8 @@
+import { Agent } from '@mastra/core/agent';
+import { Memory } from '@mastra/memory';
+import { LibSQLStore } from '@mastra/libsql';
+import { githubCodeTool, codeAnalysisTool, testCaseGeneratorTool, testExecutorTool } from '../tools/api-testing-tool';
+import { scorers } from '../scorers/api-testing-scorer';
 
 export const apiTestingAgent = new Agent({
   name: 'API Testing Agent',
@@ -34,14 +39,14 @@ export const apiTestingAgent = new Agent({
   },
   scorers: {
     issueDetectionAccuracy: {
-      scorer: scorers.issueDetectionAccuracy,
+      scorer: scorers.issueDetectionAccuracyScorer,
       sampling: {
         type: 'ratio',
         rate: 1,
       },
     },
     testCoverage: {
-      scorer: scorers.testCoverage,
+      scorer: scorers.testCoverageScorer,
       sampling: {
         type: 'ratio',
         rate: 1,

@@ -4,12 +4,20 @@ import { PinoLogger } from '@mastra/loggers';
 import { LibSQLStore } from '@mastra/libsql';
 import { weatherWorkflow } from './workflows/weather-workflow';
 import { weatherAgent } from './agents/weather-agent';
+import { apiTestingAgent } from './agents/test-agent';
 import { toolCallAppropriatenessScorer, completenessScorer, translationScorer } from './scorers/weather-scorer';
+import { issueDetectionAccuracyScorer, testCoverageScorer } from './scorers/api-testing-scorer';
 
 export const mastra = new Mastra({
   workflows: { weatherWorkflow },
-  agents: { weatherAgent },
-  scorers: { toolCallAppropriatenessScorer, completenessScorer, translationScorer },
+  agents: { weatherAgent, apiTestingAgent },
+  scorers: { 
+    toolCallAppropriatenessScorer, 
+    completenessScorer, 
+    translationScorer,
+    issueDetectionAccuracyScorer,
+    testCoverageScorer
+  },
   storage: new LibSQLStore({
     // stores observability, scores, ... into memory storage, if it needs to persist, change to file:../mastra.db
     url: ":memory:",
