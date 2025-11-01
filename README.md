@@ -11,6 +11,8 @@
 
 Agentically scan for bugs in FastAPI backend servers.
 
+We use [Moss](https://www.usemoss.dev/) (Sematic search), [Convex](https://www.convex.dev/) (State for agents), [AgentMail](https://agentmail.to/) (Email updates), [Mastra](https://mastra.ai) (Agents), [Perplexity](https://www.perplexity.ai/) (TODO: Email generation), [Replit](https://replit.com/) (Frontend)
+
 ## Contributors
 
 TODO
@@ -24,6 +26,10 @@ General system design
 Backend system design
 
 ![img_3529](https://github.com/user-attachments/assets/63ea2c70-2147-446b-b826-e6cda80aa182)
+
+More components
+
+<img width="1410" height="764" alt="image" src="https://github.com/user-attachments/assets/1ac0764f-8e39-49af-9697-6b6539c23078" />
 
 ## Components
 
@@ -51,7 +57,15 @@ Starts an agent with the provided configuration.
 
 #### 3. Email Summary Service
 
-Send an email summary with Agent Mail. 
+Send an email summary with Agent Mail.
+
+##### Email on startup
+
+<img width="1634" height="892" alt="image" src="https://github.com/user-attachments/assets/8fd3fa7e-0b13-40f0-8e5d-b24fef088172" />
+
+##### Email when agent is done
+
+<img width="1602" height="870" alt="image" src="https://github.com/user-attachments/assets/8d0020a1-1ac8-460d-af8b-c0c9ba2836a6" />
 
 #### 4. The Agents
 
@@ -70,4 +84,7 @@ The semantic search with the source aware GitHub pulling. If we want to test an 
 - We can use Reactive Queries where the Agents can subscribe to queue changes in real-time
 
 <img width="721" height="738" alt="image" src="https://github.com/user-attachments/assets/adc30cd0-29e2-416f-840c-129bc9b849be" />
+
+<img width="1440" height="775" alt="Screenshot 2025-11-01 at 10 28 21 AM" src="https://github.com/user-attachments/assets/dde7b0ba-3dc0-44a4-9d06-afa4c443b8b7" />
+
 

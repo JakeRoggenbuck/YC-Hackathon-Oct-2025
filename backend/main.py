@@ -5,6 +5,8 @@ import os
 from pathlib import Path
 from dotenv import load_dotenv
 
+from email_logic.startup_email import send_agent_startup_email
+
 # Load .env from project root
 env_path = Path(__file__).parent.parent / '.env'
 load_dotenv(env_path)
@@ -30,7 +32,7 @@ def broken_route(x: int):
 
 
 @app.post("/start-agent")
-def start_agent(request: StartAgentRequest):
+async def start_agent(request: StartAgentRequest):
 
     request_id = convex.mutation("agentRequests:insertRequest",
                 {
@@ -38,6 +40,15 @@ def start_agent(request: StartAgentRequest):
                     "hosted_api_url": request.hosted_api_url,
                     "github_repo": request.github_repo
                 })
+
+    # Mock for what Rani is making
+    async def index_github_repo(github): pass
+
+    index_name = await index_github_repo(request.github_repo)
+
+    # Call email when we start indexing
+    # Agent started! We'll send another email once it's complete
+    send_agent_startup_email(request)
 
     # TODO: Call our email service when it's done
     # Maybe this should be in the agent and not the backend?

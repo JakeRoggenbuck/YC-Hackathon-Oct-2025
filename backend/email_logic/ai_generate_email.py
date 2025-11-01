@@ -26,7 +26,6 @@ llm = ChatGoogleGenerativeAI(
     convert_system_message_to_human=True  # Gemini requires this
 )
 
-
 def read_file(file_path: str) -> str:
     """Read a test results file and return its contents."""
     try:
