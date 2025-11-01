@@ -13,6 +13,7 @@ class StartAgentRequest(BaseModel):
 @app.get("/broken-route/{x}")
 def broken_route(x: int):
     if x > 1000:
+        # THIS IS AN ERROR!!
         raise Exception
 
     return "Fine"
