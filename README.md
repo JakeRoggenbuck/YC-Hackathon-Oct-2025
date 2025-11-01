@@ -1,5 +1,7 @@
 # YC-Hackathon-Oct-2025
 
+Agentically scan for bugs in FastAPI backend servers.
+
 ## Contributors
 
 TODO
