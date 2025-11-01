@@ -41,9 +41,13 @@ langchain-google-genai
 langchain
 langchain-core
 
+# MCP (Model Context Protocol) integration with Composio
+langchain-mcp-adapters
+
 # ASGI web server and framework (optional, helpful for local testing)
 fastapi
 uvicorn[standard]
+pydantic
 
 # HTTP clients
 httpx

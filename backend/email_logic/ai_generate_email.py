@@ -37,58 +37,6 @@ def read_file(file_path: str) -> str:
         return f"[Error reading {file_path}: {str(e)}]"
 
 
-def analyze_api_tests(test_results: str) -> Dict[str, str]:
-    """
-    Analyze API testing results using Gemini.
-    Returns a dictionary with analysis results.
-    """
-    
-    # Create a comprehensive prompt for API test analysis
-    prompt_template = ChatPromptTemplate.from_messages([
-        ("system", """You are an expert API testing engineer.
-Extract and analyze ALL errors found in the test results with thorough detail.
-
-For each error, provide:
-1. **Route/Endpoint**: The full API path (e.g., POST /api/testing_agent)
-2. **Error Code**: HTTP status code (e.g., 500, 400, 422) with meaning
-3. **Input Cause**: Detailed explanation of what input/condition triggered the error
-4. **GitHub Location**: File path and line number if available
-5. **Technical Context**: What went wrong technically (stack trace, error message)
-6. **Impact**: How this affects users/API functionality
-7. **Fix**: Detailed, actionable solution with code hints if relevant
-
-Be thorough and technical. Provide enough context so developers understand the full picture."""),
-        ("human", """Analyze these API test results and extract ALL errors with comprehensive details:
-
-=== API TEST RESULTS ===
-{test_results}
-
-For each error, provide:
-- Route/Endpoint
-- Error Code and its meaning
-- Detailed Input Cause (what data, why it broke)
-- GitHub Location (if provided)
-- Technical Context (error messages, stack traces)
-- User Impact
-- Detailed Fix (actionable steps)
-
-Skip successful tests but be thorough on failures.""")
-    ])
-    
-    # Format the prompt with actual test data
-    messages = prompt_template.format_messages(
-        test_results=test_results or "[No test results provided]"
-    )
-    
-    # Get analysis from Gemini
-    print("🔍 Analyzing API test results with Gemini...")
-    response = llm.invoke(messages)
-    
-    return {
-        "analysis": response.content,
-    }
-
-
 def generate_email_json(analysis: str) -> Dict[str, str]:
     """
     Generate email as strict JSON with subject, text, and html fields.
