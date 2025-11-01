@@ -1,5 +1,5 @@
 """
-Email generation script using LangChain + Google Gemini.
+Email generation script using LangChain + Perplexity AI.
 Analyzes API testing results and generates email as JSON output.
 Returns: {"subject": "...", "text": "...", "html": "..."}
 """
@@ -8,22 +8,36 @@ import os
 import json
 from typing import Dict
 from dotenv import load_dotenv
-from langchain_google_genai import ChatGoogleGenerativeAI
+from langchain_openai import ChatOpenAI
 from langchain_core.prompts import ChatPromptTemplate
+# from langchain_google_genai import ChatGoogleGenerativeAI
 
 # Load environment variables
 load_dotenv()
 
 # Configuration
-GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
-if not GOOGLE_API_KEY:
-    raise ValueError("GOOGLE_API_KEY not found in environment variables. Please set it in .env file.")
+# GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
+# if not GOOGLE_API_KEY:
+#     raise ValueError("GOOGLE_API_KEY not found in environment variables. Please set it in .env file.")
 
-# Initialize Gemini model via LangChain
-llm = ChatGoogleGenerativeAI(
-    model="gemini-2.5-flash",
-    google_api_key=GOOGLE_API_KEY,
-    convert_system_message_to_human=True  # Gemini requires this
+# # Initialize Gemini model via LangChain
+# llm = ChatGoogleGenerativeAI(
+#     model="gemini-2.5-flash",
+#     google_api_key=GOOGLE_API_KEY,
+#     convert_system_message_to_human=True  # Gemini requires this
+# )
+
+# Configuration
+PERPLEXITY_API_KEY = os.getenv("PERPLEXITY_API_KEY")
+if not PERPLEXITY_API_KEY:
+    raise ValueError("PERPLEXITY_API_KEY not found in environment variables. Please set it in .env file.")
+
+# Initialize Perplexity model via LangChain (using OpenAI-compatible interface)
+llm = ChatOpenAI(
+    model="sonar",
+    openai_api_key=PERPLEXITY_API_KEY,
+    openai_api_base="https://api.perplexity.ai",
+    temperature=0.2,
 )
 
 def read_file(file_path: str) -> str:

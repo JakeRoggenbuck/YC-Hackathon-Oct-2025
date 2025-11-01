@@ -27,6 +27,14 @@ class StartAgentRequest(BaseModel):
     github_repo: str
 
 
+class StoreResultRequest(BaseModel):
+    request_id: str
+    email: EmailStr
+    github_url: str
+    hosted_api_url: str
+    result_summary: str
+
+
 @app.get("/broken-route/{x}")
 def broken_route(x: int):
     if x > 1000:
@@ -69,6 +77,32 @@ async def start_agent(request: StartAgentRequest):
         "message": "Agent started successfully",
         "requestId": request_id,
     }
+
+
+@app.post("/store-result")
+def store_result(request: StoreResultRequest):
+    result_id = convex.mutation(
+        "agentResults:insertResult",
+        {
+            "requestId": request.request_id,
+            "email": request.email,
+            "githubUrl": request.github_url,
+            "hostedApiUrl": request.hosted_api_url,
+            "resultSummary": request.result_summary,
+        },
+    )
+
+    return {
+        "status": "success",
+        "message": "Result stored successfully",
+        "resultId": result_id,
+    }
+
+
+@app.get("/get-results/{email}")
+def get_results(email: str):
+    results = convex.query("agentResults:getResultsByEmail", {"email": email})
+    return {"status": "success", "results": results}
 
 
 if __name__ == "__main__":

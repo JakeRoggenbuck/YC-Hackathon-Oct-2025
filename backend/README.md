@@ -12,7 +12,7 @@ The backend serves as the orchestration layer between the frontend UI and the te
 - **FastAPI** for REST API
 - **Python 3.x**
 - **AgentMail** for email notifications
-- **LangChain** with Google GenAI for agent integration
+- **LangChain** with Google GenAI & Perplexity for agent integration
 
 ## Getting Started
 

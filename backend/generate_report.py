@@ -81,7 +81,7 @@ Skip successful tests but be thorough on failures.""")
     )
     
     # Get analysis from Gemini
-    print("🔍 Analyzing API test results with Gemini...")
+    print("🔍 Analyzing API test results with AI...")
     response = llm.invoke(messages)
     
     return {

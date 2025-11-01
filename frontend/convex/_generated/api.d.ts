@@ -9,6 +9,8 @@
  */
 
 import type * as agentRequests from "../agentRequests.js";
+import type * as agentResults from "../agentResults.js";
+import type * as seedData from "../seedData.js";
 
 import type {
   ApiFromModules,
@@ -26,6 +28,8 @@ import type {
  */
 declare const fullApi: ApiFromModules<{
   agentRequests: typeof agentRequests;
+  agentResults: typeof agentResults;
+  seedData: typeof seedData;
 }>;
 declare const fullApiWithMounts: typeof fullApi;
 

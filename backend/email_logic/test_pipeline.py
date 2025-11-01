@@ -6,8 +6,8 @@ This uses a simplified test case to quickly validate the fix.
 
 import os
 from dotenv import load_dotenv
-from ai_pipeline import run_full_pipeline
-
+from ai_pipeline import run_ai_pipeline
+from startup_email import send_agent_startup_email
 # Load environment variables
 load_dotenv()
 
@@ -55,7 +55,12 @@ def main():
     
     # Run pipeline
     try:
-        run_full_pipeline(
+        send_agent_startup_email(
+            email=RECIPIENT_EMAIL,
+            hosted_api_url="https://your-hosted-api-url.com",
+            github_repo=TARGET_REPO
+        )
+        run_ai_pipeline(
             test_results=TEST_RESULTS,
             recipient_email=RECIPIENT_EMAIL,
             target_repo=TARGET_REPO,

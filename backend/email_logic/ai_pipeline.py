@@ -9,12 +9,13 @@ from dotenv import load_dotenv
 from ai_generate_email import generate_email_json, read_file
 from ai_generate_issues import analyze_api_tests
 from send_email import send_email
+from startup_email import send_agent_startup_email
 
 # Load environment variables
 load_dotenv()
 
 
-def run_full_pipeline(test_results: str, recipient_email: str, target_repo: str = None, create_github_issues: bool = True):
+def run_ai_pipeline(test_results: str, recipient_email: str, target_repo: str = None, create_github_issues: bool = True):
     """
     Complete pipeline:
     1. Process test results (accepts JSON, text, or any string)
@@ -147,7 +148,7 @@ def main():
 
     # Read the test results file
     test_results = read_file(test_results_path)
-    result = run_full_pipeline(
+    result = run_ai_pipeline(
         test_results=test_results,
         recipient_email=recipient_email,
         target_repo=target_repo,
