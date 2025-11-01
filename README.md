@@ -51,7 +51,15 @@ Starts an agent with the provided configuration.
 
 #### 3. Email Summary Service
 
-Send an email summary with Agent Mail. 
+Send an email summary with Agent Mail.
+
+##### Email on startup
+
+<img width="1634" height="892" alt="image" src="https://github.com/user-attachments/assets/8fd3fa7e-0b13-40f0-8e5d-b24fef088172" />
+
+##### Email when agent is done
+
+<img width="1602" height="870" alt="image" src="https://github.com/user-attachments/assets/8d0020a1-1ac8-460d-af8b-c0c9ba2836a6" />
 
 #### 4. The Agents
 
