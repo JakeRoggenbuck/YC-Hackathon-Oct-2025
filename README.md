@@ -17,3 +17,11 @@ Written in Python using FastAPI to start agents when requested from the frontend
 #### 3. Email Summary Service
 
 Send an email summary with Agent Mail. 
+
+#### 4. The Agents
+
+We will use Mastral to write our agents. They will use Moss, Convex, and Hyperspell for their searching and memory.
+
+They will use the provided API url and look for a openapi.json to know what routes to call. It can remember this with Hyperspell.
+
+The semantic search with the source aware GitHub pulling. If we want to test an endpoint called "/test", we can use either Moss or Convex to pull up the relevant code to augment our result.
