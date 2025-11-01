@@ -149,6 +149,48 @@ export const processNextRequestTool = createTool({
   },
 });
 
+export const insertAgentResultTool = createTool({
+  id: "insert-agent-result",
+  description: "Writes the agent's analysis results to the Convex agentResults table. Use this when you have completed your analysis and want to store the results.",
+  inputSchema: z.object({
+    requestId: z.string().describe("The Convex document ID of the original agent request"),
+    email: z.string().describe("The email address associated with the request"),
+    githubUrl: z.string().describe("The GitHub repository URL that was analyzed"),
+    hostedApiUrl: z.string().describe("The hosted API URL that was tested"),
+    resultSummary: z.string().describe("A comprehensive summary of the analysis results, including issues found, test results, and recommendations"),
+  }),
+  outputSchema: z.object({
+    success: z.boolean(),
+    resultId: z.string().optional(),
+    error: z.string().optional(),
+  }),
+  execute: async ({ requestId, email, githubUrl, hostedApiUrl, resultSummary }) => {
+    try {
+      const client = getConvexClient();
+      const resultId = await client.mutation("agentResults:insertResult" as any, {
+        requestId,
+        email,
+        githubUrl,
+        hostedApiUrl,
+        resultSummary,
+      });
+
+      console.log(`Agent result written to Convex with ID: ${resultId}`);
+      
+      return {
+        success: true,
+        resultId,
+      };
+    } catch (error: any) {
+      console.error("Error inserting agent result:", error);
+      return {
+        success: false,
+        error: error.message || "Failed to insert agent result",
+      };
+    }
+  },
+});
+
 export const startQueueMonitoring = (
   onNewRequest: (request: {
     _id: string;

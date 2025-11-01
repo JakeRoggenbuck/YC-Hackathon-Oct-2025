@@ -1,4 +1,4 @@
-from send_email import send_email
+from email_logic.send_email import send_email
 
 
 def send_agent_startup_email(email: str, hosted_api_url: str, github_repo: str) -> str:
@@ -49,7 +49,7 @@ The Recompile Team
   <!-- Main Content Wrapper -->
   <div style="background: #f9fafb; padding: 32px 16px;">
     <div style="max-width: 600px; margin: 0 auto; background: #ffffff; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); overflow: hidden;">
-      
+
       <!-- Greeting Section -->
       <div style="padding: 24px; border-bottom: 1px solid #e5e5e5;">
         <p style="margin: 0; font-size: 15px; color: #374151; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif; line-height: 1.5;">
@@ -75,7 +75,7 @@ The Recompile Team
         <h2 style="margin: 0 0 16px 0; font-size: 18px; font-weight: 600; color: #1f2937; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;">
           Configuration Details
         </h2>
-        
+
         <!-- Repository Card -->
         <div style="margin-bottom: 16px; padding: 16px; background: #f9fafb; border-radius: 6px; border: 1px solid #e5e7eb;">
           <p style="margin: 0 0 8px 0; font-size: 12px; font-weight: 600; color: #6b7280; text-transform: uppercase; letter-spacing: 0.5px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;">
