@@ -18,6 +18,20 @@ Uses Replit and React JS. Used to configure and start your agents.
 
 Written in Python using FastAPI to start agents when requested from the frontend. Also responsible for running the Email Summary Service.
 
+[Backend Docs](https://github.com/JakeRoggenbuck/YC-Hackathon-Oct-2025/tree/main/backend).
+
+**POST** `/start-agent`
+
+Starts an agent with the provided configuration.
+
+## Request Body
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `email` | string | Yes | Valid email address |
+| `hosted_api_url` | string | Yes | URL of the hosted API |
+| `github_repo` | string | Yes | GitHub repository URL |
+
 #### 3. Email Summary Service
 
 Send an email summary with Agent Mail. 
