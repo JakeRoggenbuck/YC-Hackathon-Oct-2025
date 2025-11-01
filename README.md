@@ -104,6 +104,10 @@ It then saves that to the database:
 
 <img width="1376" height="503" alt="image" src="https://github.com/user-attachments/assets/d33139f6-1bc2-4a86-8774-a2421652e83f" />
 
+Finnaly, it sends us an email!
+
+<img width="1316" height="867" alt="image" src="https://github.com/user-attachments/assets/ff39612d-b267-4772-9319-5dd35bbd5b71" />
+
 #### Engineering Notes
 - Max of 500 .py files in Moss agent for now, can be scaled later but kept at a respectable size right now to minimize system latency.
 
