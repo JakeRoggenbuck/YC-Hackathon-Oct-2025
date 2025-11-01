@@ -1,5 +1,7 @@
 # YC-Hackathon-Oct-2025
 
+**Agentically scan for bugs in FastAPI backend servers.**
+
 [![Python](https://img.shields.io/badge/Python-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org/)
 [![TypeScript](https://img.shields.io/badge/typescript-%23007ACC.svg?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 
@@ -8,8 +10,6 @@
 ![Static Badge](https://img.shields.io/badge/AgentMail-orange?style=for-the-badge)
 ![Static Badge](https://img.shields.io/badge/Mastra-purple?style=for-the-badge)
 ![Static Badge](https://img.shields.io/badge/Hyperspell-orange?style=for-the-badge)
-
-Agentically scan for bugs in FastAPI backend servers.
 
 We use [Moss](https://www.usemoss.dev/) (Sematic search), [Convex](https://www.convex.dev/) (State for agents), [AgentMail](https://agentmail.to/) (Email updates), [Mastra](https://mastra.ai) (Agents), [Perplexity](https://www.perplexity.ai/) (TODO: Email generation), [Replit](https://replit.com/) (Frontend)
 
