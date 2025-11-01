@@ -11,7 +11,7 @@
 ![Static Badge](https://img.shields.io/badge/Mastra-purple?style=for-the-badge)
 ![Static Badge](https://img.shields.io/badge/Hyperspell-orange?style=for-the-badge)
 
-We use [Moss](https://www.usemoss.dev/) (Sematic search), [Convex](https://www.convex.dev/) (State for agents), [AgentMail](https://agentmail.to/) (Email updates), [Mastra](https://mastra.ai) (Agents), [Perplexity](https://www.perplexity.ai/) (TODO: Email generation), [Replit](https://replit.com/) (Frontend)
+We use [Moss](https://www.usemoss.dev/) (Sematic search), [Convex](https://www.convex.dev/) (State for agents), [AgentMail](https://agentmail.to/) (Email updates), [Mastra](https://mastra.ai) (Agents), [Perplexity](https://www.perplexity.ai/) (Email generation), [Replit](https://replit.com/) (Frontend)
 
 This is our submission for [AgentMail](https://agentmail.to/)'s [HackHalloween](https://events.ycombinator.com/agentmail-yc25) event.
 
@@ -90,6 +90,9 @@ When there are no unprocessed:
 
 <img width="662" height="523" alt="image" src="https://github.com/user-attachments/assets/8507acec-7214-454f-9965-e07d0fd23228" />
 
+More info:
+
+<img width="650" height="695" alt="image" src="https://github.com/user-attachments/assets/18096403-497f-446e-b00a-d0becaae4b84" />
 
 #### Engineering Notes
 - Max of 500 .py files in Moss agent for now, can be scaled later but kept at a respectable size right now to minimize system latency.

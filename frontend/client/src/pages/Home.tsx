@@ -38,7 +38,7 @@ export default function Home() {
                 className="text-2xl font-bold tracking-tight bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text"
                 data-testid="text-logo"
               >
-                Recompile
+                Crash Test
               </h1>
               <p className="text-xs text-muted-foreground font-medium">
                 API Error Finding
