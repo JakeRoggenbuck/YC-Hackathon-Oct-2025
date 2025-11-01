@@ -1,6 +1,4 @@
 import os
-import json
-from pathlib import Path
 from typing import Dict
 from dotenv import load_dotenv
 from agentmail import AgentMail

@@ -6,7 +6,6 @@ Returns: {"subject": "...", "text": "...", "html": "..."}
 
 import os
 import json
-from pathlib import Path
 from typing import Dict
 from dotenv import load_dotenv
 from langchain_google_genai import ChatGoogleGenerativeAI
