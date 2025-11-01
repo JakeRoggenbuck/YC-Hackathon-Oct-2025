@@ -13,7 +13,7 @@ from send_email import send_email
 load_dotenv()
 
 
-def run_pipeline(test_results_path: str, recipient_email: str):
+def run_email_pipeline(test_results_path: str, recipient_email: str):
     """
     Complete pipeline:
     1. Read test results
@@ -70,9 +70,9 @@ def main():
     script_dir = Path(__file__).parent
     test_results_path = str(script_dir / "test_results.txt")
     recipient_email = os.getenv("RECIPIENT_EMAIL", "benedictnursalim@gmail.com")
-    
-    result = run_pipeline(test_results_path, recipient_email)
-    
+
+    result = run_email_pipeline(test_results_path, recipient_email)
+
     print("\n📊 Summary:")
     print(f"   Subject: {result['subject']}")
     print(f"   To: {result['recipient']}")

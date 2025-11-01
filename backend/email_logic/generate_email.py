@@ -11,7 +11,6 @@ from typing import Dict
 from dotenv import load_dotenv
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_core.prompts import ChatPromptTemplate
-from langchain_core.output_parsers import JsonOutputParser
 
 # Load environment variables
 load_dotenv()
@@ -103,26 +102,114 @@ def generate_email_json(analysis: str) -> Dict[str, str]:
 
 You MUST return ONLY valid JSON with these exact fields:
 {{
-  "subject": "string - email subject line",
+  "subject": "string - MUST follow this format: 'API Test Report: X critical/major errors found in [endpoint_name]' (count the actual errors and use the main endpoint name from the analysis)",
   "text": "string - plain text version of email",
   "html": "string - HTML email with Recompile branding"
 }}
 
-HTML Requirements:
-1. Start with Recompile header: <div class="email-header" style="background: hsl(342, 85.11%, 52.55%); padding: 20px; text-align: center; margin-bottom: 20px;"><h1 style="color: white; margin: 0; font-size: 28px; font-weight: 600;">Recompile</h1></div>
-2. Friendly greeting like "Hello, here is your report..."
-3. Clean HTML with inline CSS for Gmail
-4. Use Arial font, bullet points, proper spacing
-5. Error details with: route, error code, input cause, location, fix
+SUBJECT LINE RULES:
+- Format: "API Test Report: [number] [severity] errors found in [endpoint_name]"
+- Example: "API Test Report: 5 critical errors found in /api/testing_agent"
+- Example: "API Test Report: 3 major errors found in /api/users"
+- Count the ACTUAL number of errors from the analysis
+- Use the PRIMARY or MOST AFFECTED endpoint name (e.g., /api/testing_agent, /api/users)
+- Use "critical" if there are 5xx errors, otherwise "major" or just "errors"
+- If multiple endpoints, use the one with the most errors
+
+HTML Requirements - Create a professional, clean email with this structure:
+
+1. START with this exact header (copy exactly):
+<div style="background: #ffffff; border-bottom: 2px solid #e5e5e5; padding: 24px 16px;">
+  <div style="max-width: 600px; margin: 0 auto;">
+    <h1 style="font-size: 28px; font-weight: 700; margin: 0; color: #1a1a1a; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;">
+      Recompile
+    </h1>
+    <p style="font-size: 13px; color: #666; font-weight: 500; margin: 4px 0 0 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;">
+      API Error Detection Report
+    </p>
+  </div>
+</div>
+
+2. Main content wrapper:
+<div style="background: #f9fafb; padding: 32px 16px;">
+  <div style="max-width: 600px; margin: 0 auto; background: #ffffff; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); overflow: hidden;">
+    
+3. Greeting section with padding:
+<div style="padding: 24px; border-bottom: 1px solid #e5e5e5;">
+  <p style="margin: 0; font-size: 15px; color: #374151; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif; line-height: 1.5;">
+    Hello,
+  </p>
+  <p style="margin: 12px 0 0 0; font-size: 15px; color: #374151; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif; line-height: 1.5;">
+    Your API testing has completed. Here's a summary of the findings:
+  </p>
+</div>
+
+4. Summary section (brief overview):
+<div style="padding: 24px; background: #fef3f2; border-left: 4px solid #ef4444;">
+  <p style="margin: 0; font-size: 14px; font-weight: 600; color: #991b1b; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;">
+    Summary: X errors detected across Y endpoints
+  </p>
+  <p style="margin: 8px 0 0 0; font-size: 13px; color: #7f1d1d; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif; line-height: 1.5;">
+    Brief 1-2 sentence overview of critical issues
+  </p>
+</div>
+
+5. Error details section (each error in a card):
+<div style="padding: 24px;">
+  <h2 style="margin: 0 0 16px 0; font-size: 18px; font-weight: 600; color: #1f2937; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;">
+    Detailed Findings
+  </h2>
+  
+  For EACH error, create a card like this:
+  <div style="margin-bottom: 16px; padding: 16px; background: #f9fafb; border-radius: 6px; border: 1px solid #e5e7eb;">
+    <div style="margin-bottom: 12px;">
+      <span style="display: inline-block; padding: 4px 8px; background: #fee2e2; color: #991b1b; font-size: 12px; font-weight: 600; border-radius: 4px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;">
+        500 Internal Server Error
+      </span>
+    </div>
+    <p style="margin: 0 0 8px 0; font-size: 14px; font-weight: 600; color: #1f2937; font-family: 'SF Mono', Monaco, Consolas, monospace;">
+      POST /api/endpoint
+    </p>
+    <p style="margin: 0 0 12px 0; font-size: 13px; color: #6b7280; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif; line-height: 1.5;">
+      <strong>Cause:</strong> Brief description of what triggered the error
+    </p>
+    <p style="margin: 0 0 8px 0; font-size: 13px; color: #6b7280; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif; line-height: 1.5;">
+      <strong>Location:</strong> file.py:123
+    </p>
+    <p style="margin: 0; font-size: 13px; color: #059669; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif; line-height: 1.5;">
+      <strong>Fix:</strong> Actionable solution
+    </p>
+  </div>
+</div>
+
+6. Footer:
+<div style="padding: 20px 24px; background: #f9fafb; border-top: 1px solid #e5e7eb; text-align: center;">
+  <p style="margin: 0; font-size: 12px; color: #9ca3af; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;">
+    Generated by Recompile • API Error Detection
+  </p>
+</div>
+
+CLOSE all divs properly.
+
+Important styling rules:
+- Use system fonts (-apple-system, BlinkMacSystemFont, 'Segoe UI', Arial)
+- Keep content width max 600px for email compatibility
+- Use consistent spacing (padding: 24px, 16px)
+- Error badges with colors: red (#fee2e2 bg, #991b1b text) for errors
+- Monospace font for endpoints/code
+- Clean card design with subtle shadows
+- Proper hierarchy with font sizes (28px title, 18px h2, 15px body, 13-14px details)
 
 Text version: Simple plain text summary of the same content.
 
-Return ONLY the JSON object, no markdown, no code blocks, no extra text."""),
+CRITICAL: Return ONLY the raw JSON object. Do NOT wrap in markdown code blocks. Do NOT add any explanatory text before or after the JSON."""),
         ("human", """Generate email JSON based on this API test analysis:
 
 {analysis}
 
-Return ONLY valid JSON with subject, text, and html fields.""")
+IMPORTANT: Return ONLY the JSON object itself. No markdown formatting, no ```json, no code blocks, no extra text.
+
+Just the raw JSON starting with {{ and ending with }}""")
     ])
     
     messages = email_prompt.format_messages(analysis=analysis)
@@ -130,17 +217,34 @@ Return ONLY valid JSON with subject, text, and html fields.""")
     print("✉️  Generating email JSON...")
     response = llm.invoke(messages)
     
-    # Parse and validate JSON
+    # Parse and validate JSON with aggressive cleaning
     try:
-        # Clean the response (remove markdown code blocks if present)
         content = response.content.strip()
-        if content.startswith("```json"):
-            content = content[7:]
-        if content.startswith("```"):
-            content = content[3:]
-        if content.endswith("```"):
-            content = content[:-3]
-        content = content.strip()
+        
+        # Remove all possible markdown formatting
+        # Remove leading code block markers
+        while content.startswith("```"):
+            if content.startswith("```json"):
+                content = content[7:].strip()
+            elif content.startswith("```"):
+                content = content[3:].strip()
+        
+        # Remove trailing code block markers
+        while content.endswith("```"):
+            content = content[:-3].strip()
+        
+        # Remove any "Response content:" prefix if present
+        if "Response content:" in content:
+            content = content.split("Response content:", 1)[1].strip()
+        
+        # Find the actual JSON object (starts with { and ends with })
+        start_idx = content.find('{')
+        end_idx = content.rfind('}')
+        
+        if start_idx == -1 or end_idx == -1:
+            raise ValueError("No valid JSON object found in response")
+        
+        content = content[start_idx:end_idx + 1]
         
         email_data = json.loads(content)
         
@@ -160,54 +264,3 @@ Return ONLY valid JSON with subject, text, and html fields.""")
     except Exception as e:
         print(f"❌ Validation error: {e}")
         raise
-
-
-def main():
-    """Main execution function - generates email JSON and optionally sends it."""
-    print("=" * 60)
-    print("📧 API Testing Email Generator - LangChain + Gemini")
-    print("=" * 60)
-    print()
-    
-    # Define test results file path
-    script_dir = Path(__file__).parent
-    test_results_path = script_dir / "test_results.txt"
-    
-    # Read test results
-    print(f"📂 Reading API test results from: {test_results_path}")
-    test_results = read_file(str(test_results_path))
-    print()
-    
-    # Analyze test results
-    analysis_result = analyze_api_tests(test_results)
-    
-    print("\n" + "=" * 60)
-    print("📊 ANALYSIS RESULTS")
-    print("=" * 60)
-    print(analysis_result["analysis"][:500] + "..." if len(analysis_result["analysis"]) > 500 else analysis_result["analysis"])
-    print()
-    
-    # Generate email JSON
-    email_data = generate_email_json(analysis=analysis_result["analysis"])
-    
-    print("\n" + "=" * 60)
-    print("📧 GENERATED EMAIL JSON")
-    print("=" * 60)
-    print(f"Subject: {email_data['subject']}")
-    print(f"Text length: {len(email_data['text'])} chars")
-    print(f"HTML length: {len(email_data['html'])} chars")
-    print()
-    
-    # Save output
-    output_json_path = script_dir / "email_output.json"
-    with open(output_json_path, 'w') as f:
-        json.dump(email_data, f, indent=2)
-    
-    print(f"✅ Email JSON saved to: {output_json_path}")
-    print()
-    
-    return email_data
-
-
-if __name__ == "__main__":
-    main()
