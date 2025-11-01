@@ -33,6 +33,8 @@ build/
 .env.*
 !.env.example
 
+venv/
+
 # Test coverage
 coverage/
 
