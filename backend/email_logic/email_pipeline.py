@@ -6,7 +6,7 @@ Chains generate_email.py and send_email.py together.
 import os
 from pathlib import Path
 from dotenv import load_dotenv
-from generate_email import analyze_api_tests, generate_email_json, read_file
+from ai_generate_email import analyze_api_tests, generate_email_json, read_file
 from send_email import send_email
 
 # Load environment variables
