@@ -70,6 +70,55 @@ def _parse_issues_from_text(model_text: str) -> List[Dict[str, Any]]:
     return []
 
 
+def _parse_github_repo(repo_string: str) -> tuple[Optional[str], Optional[str]]:
+    """
+    Parse a GitHub repository string and extract owner and repo name.
+    
+    Handles formats:
+    - "owner/repo" -> ("owner", "repo")
+    - "https://github.com/owner/repo" -> ("owner", "repo")
+    - "https://github.com/owner/repo.git" -> ("owner", "repo")
+    
+    Returns:
+        Tuple of (owner, repo) or (None, None) if parsing fails
+    """
+    if not repo_string:
+        return None, None
+    
+    repo_string = repo_string.strip()
+    
+    # Remove .git suffix if present
+    if repo_string.endswith(".git"):
+        repo_string = repo_string[:-4]
+    
+    # Handle full GitHub URL
+    if "github.com" in repo_string:
+        # Extract path after github.com/
+        try:
+            # Remove protocol if present
+            if "://" in repo_string:
+                repo_string = repo_string.split("://", 1)[1]
+            
+            # Remove github.com/ prefix
+            if "github.com/" in repo_string:
+                repo_string = repo_string.split("github.com/", 1)[1]
+            
+            # Remove any trailing slashes or additional path segments
+            parts = repo_string.split("/")
+            if len(parts) >= 2:
+                return parts[0], parts[1]
+        except Exception:
+            pass
+    
+    # Handle simple "owner/repo" format
+    if "/" in repo_string:
+        parts = repo_string.split("/", 1)
+        if len(parts) == 2:
+            return parts[0], parts[1]
+    
+    return None, None
+
+
 async def _open_github_issues_with_mcp(
     issues: List[Dict[str, Any]],
     mcp_url: str,
@@ -117,11 +166,12 @@ async def _open_github_issues_with_mcp(
         # 3. Call that tool for each issue Gemini proposed
         for spec in issues:
             try:
-                owner = None
-                repo = None
+                # Parse the repo string (handles URLs and "owner/repo" format)
                 repo_full = (spec.get("repo") or "").strip()
-                if "/" in repo_full:
-                    owner, repo = repo_full.split("/", 1)
+                owner, repo = _parse_github_repo(repo_full)
+                
+                if not owner or not repo:
+                    raise ValueError(f"Could not parse repository from: {repo_full}")
 
                 payload = {
                     "owner": owner,
@@ -153,7 +203,7 @@ async def _open_github_issues_with_mcp(
     return results
 
 
-def analyze_api_tests(test_results: str, target_repo: str = None) -> Dict[str, Any]:
+async def analyze_api_tests(test_results: str, target_repo: str = None) -> Dict[str, Any]:
     """
     1. Ask AI to analyze API test logs.
     2. Parse out structured issues.
@@ -163,28 +213,28 @@ def analyze_api_tests(test_results: str, target_repo: str = None) -> Dict[str, A
         test_results: The test output to analyze
         target_repo: Optional GitHub repo in "owner/repo" format to assign to all issues
     """
-    # GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
-    # if not GOOGLE_API_KEY:
-    #     raise ValueError("GOOGLE_API_KEY not found in environment variables. Please set it in .env file.")
+    GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
+    if not GOOGLE_API_KEY:
+        raise ValueError("GOOGLE_API_KEY not found in environment variables. Please set it in .env file.")
 
-    # # --- 1. Gemini analysis
-    # llm = ChatGoogleGenerativeAI(
-    #     model=os.getenv("GEMINI_MODEL", "gemini-2.5-flash"),
-    #     google_api_key=GOOGLE_API_KEY,
-    #     temperature=0,
-    # )
-
-    PERPLEXITY_API_KEY = os.getenv("PERPLEXITY_API_KEY")
-    if not PERPLEXITY_API_KEY:
-        raise ValueError("PERPLEXITY_API_KEY not found in environment variables. Please set it in .env file.")
-
-    # Initialize Perplexity model via LangChain (using OpenAI-compatible interface)
-    llm = ChatOpenAI(
-        model="sonar",
-        openai_api_key=PERPLEXITY_API_KEY,
-        openai_api_base="https://api.perplexity.ai",
-        temperature=0.2,
+    # Gemini analysis
+    llm = ChatGoogleGenerativeAI(
+        model=os.getenv("GEMINI_MODEL", "gemini-2.5-flash"),
+        google_api_key=GOOGLE_API_KEY,
+        temperature=0,
     )
+
+    # PERPLEXITY_API_KEY = os.getenv("PERPLEXITY_API_KEY")
+    # if not PERPLEXITY_API_KEY:
+    #     raise ValueError("PERPLEXITY_API_KEY not found in environment variables. Please set it in .env file.")
+
+    # # Initialize Perplexity model via LangChain (using OpenAI-compatible interface)
+    # llm = ChatOpenAI(
+    #     model="sonar",
+    #     openai_api_key=PERPLEXITY_API_KEY,
+    #     openai_api_base="https://api.perplexity.ai",
+    #     temperature=0.2,
+    # )
 
     messages = _build_messages(test_results)
     gemini_resp = llm.invoke(messages)
@@ -203,9 +253,8 @@ def analyze_api_tests(test_results: str, target_repo: str = None) -> Dict[str, A
     mcp_url = os.getenv("COMPOSIO_MCP_URL", "").strip()
     if mcp_url and issues:
         try:
-            issue_results = asyncio.run(
-                _open_github_issues_with_mcp(issues, mcp_url)
-            )
+            issue_results = await _open_github_issues_with_mcp(issues, mcp_url)
+        
         except Exception as e:
             issue_results = [
                 (

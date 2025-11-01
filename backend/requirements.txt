@@ -4,6 +4,7 @@ convex==0.7.0
 python-dotenv==1.2.1
 fastapi
 uvicorn[standard]
+email-validator
 
 # HTTP Clients
 httpx==0.28.1

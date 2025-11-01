@@ -1,4 +1,7 @@
-from send_email import send_email
+try:
+    from .send_email import send_email
+except ImportError:
+    from send_email import send_email
 
 
 def send_agent_startup_email(email: str, hosted_api_url: str, github_repo: str) -> str:
