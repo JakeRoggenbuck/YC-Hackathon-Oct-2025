@@ -2,7 +2,7 @@
 
 ## Design
 
-<img width="1252" height="665" alt="image" src="https://github.com/user-attachments/assets/ce4d196f-9c06-4c81-98d6-d50e7e725214" />
+<img width="3380" height="1902" alt="agentic api bug finder" src="https://github.com/user-attachments/assets/1cd6f365-456f-4bf8-93be-07afba777e67" />
 
 ## Components
 
