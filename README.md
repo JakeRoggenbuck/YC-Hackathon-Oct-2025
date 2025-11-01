@@ -43,3 +43,6 @@ We will use [Mastra](https://mastra.ai) to write our agents. They will use [Moss
 They will use the provided API url and look for a openapi.json to know what routes to call. It can remember this with Hyperspell.
 
 The semantic search with the source aware GitHub pulling. If we want to test an endpoint called "/test", we can use either Moss or Convex to pull up the relevant code to augment our result.
+
+<img width="721" height="738" alt="image" src="https://github.com/user-attachments/assets/adc30cd0-29e2-416f-840c-129bc9b849be" />
+
