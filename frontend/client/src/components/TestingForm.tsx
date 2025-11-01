@@ -22,9 +22,8 @@ const formSchema = z.object({
     },
     { message: "API URL must use HTTP or HTTPS protocol" }
   ),
-  githubUrl: z.string().optional().refine(
+  githubUrl: z.string().min(1, "GitHub URL is required").url("Please enter a valid GitHub URL").refine(
     (url) => {
-      if (!url || url.trim() === "") return true;
       try {
         const parsed = new URL(url);
         return parsed.hostname === "github.com" || parsed.hostname === "www.github.com";
@@ -185,7 +184,7 @@ export default function TestingForm({ onSuccess }: TestingFormProps) {
 
       <div className="space-y-3">
         <Label htmlFor="githubUrl" className="text-sm font-semibold">
-          GitHub Repository <span className="text-muted-foreground text-xs font-normal">(optional)</span>
+          GitHub Repository <span className="text-destructive">*</span>
         </Label>
         <div className="relative">
           <Input
