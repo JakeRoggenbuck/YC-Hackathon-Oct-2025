@@ -78,6 +78,11 @@ The semantic search with the source aware GitHub pulling. If we want to test an 
 #### Engineering Notes
 - Max of 500 .py files in Moss agent for now, can be scaled later but kept at a respectable size right now to minimize system latency.
 
+##### Why use Convex?
+- Uses a queue system to keep agent state
+- Our Mastra agents are in typescript and backend is in python. We would already need a HTTP server anyways, might as well use Convx as a queue for fast data retrieval.
+- We can use Reactive Queries where the Agents can subscribe to queue changes in real-time
+
 <img width="721" height="738" alt="image" src="https://github.com/user-attachments/assets/adc30cd0-29e2-416f-840c-129bc9b849be" />
 
 <img width="1440" height="775" alt="Screenshot 2025-11-01 at 10 28 21 AM" src="https://github.com/user-attachments/assets/dde7b0ba-3dc0-44a4-9d06-afa4c443b8b7" />
