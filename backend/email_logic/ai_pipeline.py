@@ -42,7 +42,7 @@ async def run_ai_pipeline(test_results: str, recipient_email: str, target_repo: 
         send_startup_email: Whether to send a startup notification email (default: False)
     """
     print("=" * 70)
-    print("🚀 RECOMPILE FULL AI PIPELINE")
+    print("🚀 Crash Test FULL AI PIPELINE")
     print("=" * 70)
     print()
     

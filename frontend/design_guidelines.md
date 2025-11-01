@@ -1,4 +1,4 @@
-# Recompile API Error Finding Form - Design Guidelines
+# Crash Test API Error Finding Form - Design Guidelines
 
 ## Design Approach
 
@@ -104,7 +104,7 @@
 **Single-Page Application:**
 
 1. **Header Section** (py-8, text-center)
-   - Recompile wordmark/logo (h-8)
+   - Crash Test wordmark/logo (h-8)
    - Tagline: "API Stress Testing & Error Finding" (text-sm, muted)
 
 2. **Main Form Section** (flex-1, flex items-center justify-center)

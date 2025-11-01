@@ -1,4 +1,5 @@
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, EmailStr
 from convex import ConvexClient
 import os
@@ -14,6 +15,15 @@ env_path = Path(__file__).parent.parent / ".env"
 load_dotenv(env_path)
 
 app = FastAPI()
+
+# Configure CORS
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:5173", "http://localhost:3000"],  # Frontend dev servers
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 CONVEX_URL = os.getenv("CONVEX_URL")
 convex = ConvexClient(CONVEX_URL)

@@ -145,7 +145,7 @@ Via Composio MCP, the system:
 ### 3. Email Generation
 
 Generates professional emails with:
-- Clean HTML formatting with Recompile branding
+- Clean HTML formatting with Crash Test branding
 - Error summaries with status codes
 - File locations and stack traces
 - Actionable fix steps
@@ -259,7 +259,7 @@ Benefits:
 
 ```
 ======================================================================
-🚀 RECOMPILE FULL AI PIPELINE
+🚀 Crash Test FULL AI PIPELINE
 ======================================================================
 
 📂 Step 1: Processing test results...

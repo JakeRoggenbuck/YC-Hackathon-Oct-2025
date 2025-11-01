@@ -91,7 +91,7 @@ Skip successful tests but be thorough on failures.""")
 
 def generate_email(analysis: str, recipient: str = "team@example.com") -> Dict[str, str]:
     """
-    Generate email content as strict JSON for Gmail with Recompile branding.
+    Generate email content as strict JSON for Gmail with Crash Test branding.
     Returns dict with subject, text, and html fields.
     """
     
@@ -106,7 +106,7 @@ CRITICAL: You MUST return ONLY a valid JSON object with these exact fields:
 }
 
 HTML REQUIREMENTS:
-1. Start with Recompile header: <div class="email-header" style="background: hsl(342, 85.11%, 52.55%); padding: 20px; text-align: center; margin-bottom: 20px;"><h1 style="color: white; margin: 0; font-size: 28px; font-weight: 600;">Recompile</h1></div>
+1. Start with Crash Test header: <div class="email-header" style="background: hsl(342, 85.11%, 52.55%); padding: 20px; text-align: center; margin-bottom: 20px;"><h1 style="color: white; margin: 0; font-size: 28px; font-weight: 600;">Crash Test</h1></div>
 2. Add a friendly greeting like "Hello, here is your report..."
 3. Use proper HTML formatting with inline CSS for Gmail compatibility
 4. Use clean typography (Arial, sans-serif)
@@ -131,7 +131,7 @@ Return ONLY this JSON structure (no other text):
 {{
   "subject": "Your subject line here",
   "text": "Plain text version with greeting, summary, and error list",
-  "html": "<div class='email-header' style='background: hsl(342, 85.11%, 52.55%); padding: 20px; text-align: center; margin-bottom: 20px;'><h1 style='color: white; margin: 0; font-size: 28px; font-weight: 600;'>Recompile</h1></div><div style='font-family: Arial, sans-serif; color: #333; line-height: 1.6; max-width: 600px;'><p style='font-size: 16px;'>Friendly greeting...</p><p style='font-size: 14px; color: #666;'>Brief summary</p><h3 style='color: #d32f2f; margin-top: 24px;'>Errors Found:</h3>Error details with bullets and styling</div>"
+  "html": "<div class='email-header' style='background: hsl(342, 85.11%, 52.55%); padding: 20px; text-align: center; margin-bottom: 20px;'><h1 style='color: white; margin: 0; font-size: 28px; font-weight: 600;'>Crash Test</h1></div><div style='font-family: Arial, sans-serif; color: #333; line-height: 1.6; max-width: 600px;'><p style='font-size: 16px;'>Friendly greeting...</p><p style='font-size: 14px; color: #666;'>Brief summary</p><h3 style='color: #d32f2f; margin-top: 24px;'>Errors Found:</h3>Error details with bullets and styling</div>"
 }}
 
 Make text version readable without HTML. Make HTML feel like a helpful coworker sharing test results.""")

@@ -1,6 +1,7 @@
 import { useState } from "react";
 import TestingForm from "@/components/TestingForm";
 import SuccessMessage from "@/components/SuccessMessage";
+import WorkflowProgress from "@/components/WorkflowProgress";
 import { Activity, Zap, Shield, BarChart3 } from "lucide-react";
 
 interface SubmittedData {
@@ -9,17 +10,28 @@ interface SubmittedData {
   githubUrl?: string;
 }
 
+type WorkflowStatus = "idle" | "starting" | "waiting-for-results" | "running-pipeline" | "complete" | "error";
+
 export default function Home() {
   const [submittedData, setSubmittedData] = useState<SubmittedData | null>(
     null
   );
+  const [workflowStatus, setWorkflowStatus] = useState<WorkflowStatus>("idle");
+  const [workflowMessage, setWorkflowMessage] = useState<string>("");
 
   const handleSuccess = (data: SubmittedData) => {
     setSubmittedData(data);
   };
 
+  const handleWorkflowStatusChange = (status: string, message?: string) => {
+    setWorkflowStatus(status as WorkflowStatus);
+    setWorkflowMessage(message || "");
+  };
+
   const handleReset = () => {
     setSubmittedData(null);
+    setWorkflowStatus("idle");
+    setWorkflowMessage("");
   };
 
   return (
@@ -50,7 +62,7 @@ export default function Home() {
 
       <main className="relative flex-1 flex items-center justify-center px-4 py-16">
         <div className="w-full max-w-2xl">
-          {!submittedData ? (
+          {workflowStatus === "idle" ? (
             <div className="space-y-10">
               <div className="text-center space-y-4">
                 <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20 text-sm font-medium text-primary mb-4">
@@ -71,7 +83,10 @@ export default function Home() {
               <div className="relative group">
                 <div className="absolute -inset-1 bg-gradient-to-r from-primary/20 via-primary/10 to-primary/20 rounded-xl blur-lg group-hover:blur-xl transition-all duration-500 opacity-50 group-hover:opacity-75" />
                 <div className="relative bg-card border border-card-border rounded-xl p-10 shadow-2xl backdrop-blur-sm">
-                  <TestingForm onSuccess={handleSuccess} />
+                  <TestingForm 
+                    onSuccess={handleSuccess} 
+                    onWorkflowStatusChange={handleWorkflowStatusChange}
+                  />
                 </div>
               </div>
 
@@ -102,7 +117,7 @@ export default function Home() {
                 </div>
               </div>
             </div>
-          ) : (
+          ) : workflowStatus === "complete" && submittedData ? (
             <div className="relative group">
               <div className="absolute -inset-1 bg-gradient-to-r from-primary/20 via-primary/10 to-primary/20 rounded-xl blur-lg transition-all duration-500 opacity-50" />
               <div className="relative bg-card border border-card-border rounded-xl p-10 shadow-2xl backdrop-blur-sm">
@@ -111,6 +126,16 @@ export default function Home() {
                   apiUrl={submittedData.apiUrl}
                   githubUrl={submittedData.githubUrl}
                   onReset={handleReset}
+                />
+              </div>
+            </div>
+          ) : (
+            <div className="relative group">
+              <div className="absolute -inset-1 bg-gradient-to-r from-primary/20 via-primary/10 to-primary/20 rounded-xl blur-lg transition-all duration-500 opacity-50" />
+              <div className="relative bg-card border border-card-border rounded-xl shadow-2xl backdrop-blur-sm">
+                <WorkflowProgress 
+                  status={workflowStatus}
+                  message={workflowMessage}
                 />
               </div>
             </div>

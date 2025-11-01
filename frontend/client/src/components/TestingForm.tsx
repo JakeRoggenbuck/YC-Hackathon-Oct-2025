@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -6,8 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { CheckCircle2, AlertCircle, Loader2 } from "lucide-react";
-import { useMutation } from "@tanstack/react-query";
-import { apiRequest } from "@/lib/queryClient";
+import { useAgentWorkflow } from "@/hooks/use-agent-workflow";
 
 const formSchema = z.object({
   email: z.string().email("Please enter a valid email address"),
@@ -39,13 +38,23 @@ type FormData = z.infer<typeof formSchema>;
 
 interface TestingFormProps {
   onSuccess?: (data: FormData) => void;
+  onWorkflowStatusChange?: (status: string, message?: string) => void;
 }
 
-export default function TestingForm({ onSuccess }: TestingFormProps) {
+export default function TestingForm({ onSuccess, onWorkflowStatusChange }: TestingFormProps) {
   const [isValidating, setIsValidating] = useState<{
     apiUrl?: boolean;
     githubUrl?: boolean;
   }>({});
+  
+  const [workflowEmail, setWorkflowEmail] = useState<string | null>(null);
+  const [shouldPoll, setShouldPoll] = useState(false);
+  const [workflowData, setWorkflowData] = useState<FormData | null>(null);
+
+  const { startAgentMutation, useResultsPolling, runPipelineMutation } = useAgentWorkflow();
+  
+  // Poll for results when shouldPoll is true
+  const resultsQuery = useResultsPolling(workflowEmail, shouldPoll);
 
   const {
     register,
@@ -63,6 +72,40 @@ export default function TestingForm({ onSuccess }: TestingFormProps) {
     },
   });
 
+  // Handle workflow progression
+  useEffect(() => {
+    if (resultsQuery.data && workflowData && !runPipelineMutation.isSuccess) {
+      // Results are ready, now run the pipeline
+      onWorkflowStatusChange?.("running-pipeline", "Running AI analysis and creating issues...");
+      runPipelineMutation.mutate(workflowData);
+    }
+  }, [resultsQuery.data, workflowData, runPipelineMutation.isSuccess]);
+
+  useEffect(() => {
+    if (runPipelineMutation.isSuccess && workflowData) {
+      // Pipeline complete!
+      onWorkflowStatusChange?.("complete", "Analysis complete! Check your email for results.");
+      if (onSuccess) {
+        onSuccess(workflowData);
+      }
+    }
+  }, [runPipelineMutation.isSuccess, workflowData]);
+
+  useEffect(() => {
+    if (startAgentMutation.isSuccess && workflowEmail) {
+      onWorkflowStatusChange?.("waiting-for-results", "Agent started. Waiting for test results...");
+    }
+  }, [startAgentMutation.isSuccess, workflowEmail]);
+
+  useEffect(() => {
+    if (resultsQuery.isError) {
+      const errorCount = resultsQuery.failureCount || 0;
+      if (errorCount < 100) {
+        onWorkflowStatusChange?.("waiting-for-results", `Still processing... (${Math.floor(errorCount * 3 / 60)}m ${(errorCount * 3) % 60}s)`);
+      }
+    }
+  }, [resultsQuery.isError, resultsQuery.failureCount]);
+
   const apiUrlValue = watch("apiUrl");
   const githubUrlValue = watch("githubUrl");
 
@@ -74,44 +117,30 @@ export default function TestingForm({ onSuccess }: TestingFormProps) {
     }, 300);
   };
 
-  const mutation = useMutation<any, Error, FormData>({
-    mutationFn: async (payload: FormData) => {
-      // Send to backend endpoint - map frontend fields to backend expected names
-      const backendPayload = {
-        email: payload.email,
-        github_repo: payload.githubUrl,  // Backend expects github_repo
-        hosted_api_url: payload.apiUrl,  // Backend expects hosted_api_url
-      };
-      
-      try {
-        const res = await apiRequest("POST", "http://localhost:8000/start-agent", backendPayload);
-        // try parse json if any
-        try {
-          return await res.json();
-        } catch {
-          return null;
-        }
-      } catch (err: any) {
-        // If endpoint not found (404), treat as success for UI testing
-        if (err && typeof err.message === "string" && err.message.startsWith("404")) {
-          return null;
-        }
-        throw err;
-      }
-    },
-  });
-
   const onSubmit = async (data: FormData) => {
     console.log("Form submitted:", data);
     try {
-      await mutation.mutateAsync(data);
-      if (onSuccess) onSuccess(data);
+      setWorkflowData(data);
+      setWorkflowEmail(data.email);
+      
+      onWorkflowStatusChange?.("starting", "Starting agent...");
+      
+      // Step 1: Start the agent
+      await startAgentMutation.mutateAsync(data);
+      
+      // Step 2: Enable polling for results
+      setShouldPoll(true);
+      
     } catch (err) {
       console.error("Submit failed:", err);
-      // optionally surface error to user here
+      onWorkflowStatusChange?.("error", "Failed to start agent. Please try again.");
       throw err;
     }
   };
+
+  const isProcessing = startAgentMutation.isPending || 
+                       shouldPoll || 
+                       runPipelineMutation.isPending;
 
   const getFieldStatus = (
     fieldName: keyof FormData,
@@ -227,13 +256,13 @@ export default function TestingForm({ onSuccess }: TestingFormProps) {
         <Button
           type="submit"
           className="w-full h-12 text-base font-semibold shadow-lg shadow-primary/25 hover:shadow-xl hover:shadow-primary/30 transition-all duration-200"
-          disabled={isSubmitting}
+          disabled={isProcessing}
           data-testid="button-submit"
         >
-          {isSubmitting ? (
+          {isProcessing ? (
             <>
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Submitting...
+              Processing...
             </>
           ) : (
             "Start Error Finding"
