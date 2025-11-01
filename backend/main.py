@@ -6,7 +6,7 @@ from pathlib import Path
 from dotenv import load_dotenv
 
 from email_logic.startup_email import send_agent_startup_email
-from moss_indexer import index_github_repo
+# from moss_indexer import index_github_repo
 
 # Load .env from project root
 env_path = Path(__file__).parent.parent / '.env'
@@ -39,15 +39,15 @@ async def start_agent(request: StartAgentRequest):
     request_id = convex.mutation("agentRequests:insertRequest",
                 {
                     "email": request.email,
-                    "hosted_api_url": request.hosted_api_url,
-                    "github_repo": request.github_repo
+                    "hostedApiUrl": request.hosted_api_url,
+                    "githubUrl": request.github_repo
                 })
 
     # Mock for what Rani is making
-    async def index_github_repo(github): pass
+    # async def index_github_repo(github): pass
 
-    index_name = await index_github_repo(request.github_repo)
-    print(index_name)
+    # index_name = await index_github_repo(request.github_repo)
+    # print(index_name)
 
     # Call email when we start indexing
     # Agent started! We'll send another email once it's complete
