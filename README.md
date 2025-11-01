@@ -8,7 +8,11 @@ TODO
 
 ## Design
 
+General system design
+
 <img width="3380" height="1902" alt="agentic api bug finder" src="https://github.com/user-attachments/assets/1cd6f365-456f-4bf8-93be-07afba777e67" />
+
+Backend system design
 
 ![img_3529](https://github.com/user-attachments/assets/63ea2c70-2147-446b-b826-e6cda80aa182)
 
