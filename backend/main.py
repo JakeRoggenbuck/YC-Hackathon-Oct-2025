@@ -18,6 +18,8 @@ CONVEX_URL = os.getenv("CONVEX_URL")
 convex = ConvexClient(CONVEX_URL)
 
 RUN_MOSS = False
+WRITE_CONVEX = True
+
 
 class StartAgentRequest(BaseModel):
     email: EmailStr
@@ -38,14 +40,18 @@ def broken_route(x: int):
 async def start_agent(request: StartAgentRequest):
     # Create Moss index for GitHub project
 
-    request_id = convex.mutation(
-        "agentRequests:insertRequest",
-        {
-            "email": request.email,
-            "hostedApiUrl": request.hosted_api_url,
-            "githubUrl": request.github_repo,
-        },
-    )
+    # Default value for request
+    request_id = request
+
+    if WRITE_CONVEX:
+        request_id = convex.mutation(
+            "agentRequests:insertRequest",
+            {
+                "email": request.email,
+                "hostedApiUrl": request.hosted_api_url,
+                "githubUrl": request.github_repo,
+            },
+        )
 
     if RUN_MOSS:
         index_name = await index_github_repo(request.github_repo)
