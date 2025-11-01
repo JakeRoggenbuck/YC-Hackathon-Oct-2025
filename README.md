@@ -1,5 +1,7 @@
 # YC-Hackathon-Oct-2025
 
+**Agentically scan for bugs in FastAPI backend servers.**
+
 [![Python](https://img.shields.io/badge/Python-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org/)
 [![TypeScript](https://img.shields.io/badge/typescript-%23007ACC.svg?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 
@@ -9,7 +11,7 @@
 ![Static Badge](https://img.shields.io/badge/Mastra-purple?style=for-the-badge)
 ![Static Badge](https://img.shields.io/badge/Hyperspell-orange?style=for-the-badge)
 
-Agentically scan for bugs in FastAPI backend servers.
+We use [Moss](https://www.usemoss.dev/) (Sematic search), [Convex](https://www.convex.dev/) (State for agents), [AgentMail](https://agentmail.to/) (Email updates), [Mastra](https://mastra.ai) (Agents), [Perplexity](https://www.perplexity.ai/) (TODO: Email generation), [Replit](https://replit.com/) (Frontend)
 
 ## Contributors
 
@@ -24,6 +26,10 @@ General system design
 Backend system design
 
 ![img_3529](https://github.com/user-attachments/assets/63ea2c70-2147-446b-b826-e6cda80aa182)
+
+More components
+
+<img width="1410" height="764" alt="image" src="https://github.com/user-attachments/assets/1ac0764f-8e39-49af-9697-6b6539c23078" />
 
 ## Components
 
@@ -72,5 +78,11 @@ The semantic search with the source aware GitHub pulling. If we want to test an 
 #### Engineering Notes
 - Max of 500 .py files in Moss agent for now, can be scaled later but kept at a respectable size right now to minimize system latency.
 
+##### Why use Convex?
+- Uses a queue system to keep agent state
+- Our Mastra agents are in typescript and backend is in python. We would already need a HTTP server anyways, might as well use Convx as a queue for fast data retrieval.
+- We can use Reactive Queries where the Agents can subscribe to queue changes in real-time
+
 <img width="721" height="738" alt="image" src="https://github.com/user-attachments/assets/adc30cd0-29e2-416f-840c-129bc9b849be" />
+
 

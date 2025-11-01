@@ -18,6 +18,8 @@ npm install
 npm run dev
 ```
 
+To run convex ``` npx convex dev ```
+
 The application will start on `http://localhost:5173` (or your configured port).
 
 ## Project Structure

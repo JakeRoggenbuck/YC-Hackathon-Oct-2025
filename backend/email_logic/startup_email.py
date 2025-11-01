@@ -1,4 +1,4 @@
-from send_email import send_email
+from email_logic.send_email import send_email
 
 
 def send_agent_startup_email(email: str, hosted_api_url: str, github_repo: str) -> str:
