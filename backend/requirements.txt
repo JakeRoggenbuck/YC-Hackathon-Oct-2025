@@ -11,6 +11,7 @@ requests==2.32.5
 
 # LangChain and AI
 langchain-google-genai
+langchain-openai
 langchain
 langchain-core
 langchain-mcp-adapters

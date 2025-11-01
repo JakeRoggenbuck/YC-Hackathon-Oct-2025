@@ -7,6 +7,7 @@ from dotenv import load_dotenv
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_mcp_adapters.client import MultiServerMCPClient
+from langchain_openai import ChatOpenAI
 
 # Load environment variables from .env file
 load_dotenv()
@@ -154,7 +155,7 @@ async def _open_github_issues_with_mcp(
 
 def analyze_api_tests(test_results: str, target_repo: str = None) -> Dict[str, Any]:
     """
-    1. Ask Gemini to analyze API test logs.
+    1. Ask AI to analyze API test logs.
     2. Parse out structured issues.
     3. (If COMPOSIO_MCP_URL is set) create GitHub issues via Composio MCP.
     
@@ -162,18 +163,28 @@ def analyze_api_tests(test_results: str, target_repo: str = None) -> Dict[str, A
         test_results: The test output to analyze
         target_repo: Optional GitHub repo in "owner/repo" format to assign to all issues
     """
-    GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
-    if not GOOGLE_API_KEY:
-        raise ValueError("GOOGLE_API_KEY not found in environment variables. Please set it in .env file.")
+    # GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
+    # if not GOOGLE_API_KEY:
+    #     raise ValueError("GOOGLE_API_KEY not found in environment variables. Please set it in .env file.")
 
-    # --- 1. Gemini analysis
-    llm = ChatGoogleGenerativeAI(
-        model=os.getenv("GEMINI_MODEL", "gemini-2.5-flash"),
-        google_api_key=GOOGLE_API_KEY,
-        temperature=0,
+    # # --- 1. Gemini analysis
+    # llm = ChatGoogleGenerativeAI(
+    #     model=os.getenv("GEMINI_MODEL", "gemini-2.5-flash"),
+    #     google_api_key=GOOGLE_API_KEY,
+    #     temperature=0,
+    # )
+
+    PERPLEXITY_API_KEY = os.getenv("PERPLEXITY_API_KEY")
+    if not PERPLEXITY_API_KEY:
+        raise ValueError("PERPLEXITY_API_KEY not found in environment variables. Please set it in .env file.")
+
+    # Initialize Perplexity model via LangChain (using OpenAI-compatible interface)
+    llm = ChatOpenAI(
+        model="sonar",
+        openai_api_key=PERPLEXITY_API_KEY,
+        openai_api_base="https://api.perplexity.ai",
+        temperature=0.2,
     )
-
-
 
     messages = _build_messages(test_results)
     gemini_resp = llm.invoke(messages)
