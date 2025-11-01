@@ -44,8 +44,19 @@ The results will be sent to: ${request.email}
       console.log("\nAgent completed analysis");
       console.log("Response:", response.text);
 
-      // TODO: Send email with results
-      console.log(`\nWould send results to: ${request.email}`);
+      await fetch("http://localhost:8000/store-result", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          request_id: request._id,
+          email: request.email,
+          github_url: request.githubUrl,
+          hosted_api_url: request.hostedApiUrl,
+          result_summary: response.text,
+        }),
+      });
+
+      console.log(`\nResults stored and would send email to: ${request.email}`);
       
     } catch (error) {
       console.error("\nError processing request:", error);
