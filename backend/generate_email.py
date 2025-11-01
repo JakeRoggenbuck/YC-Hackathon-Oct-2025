@@ -46,29 +46,33 @@ def analyze_api_tests(test_results: str) -> Dict[str, str]:
     # Create a comprehensive prompt for API test analysis
     prompt_template = ChatPromptTemplate.from_messages([
         ("system", """You are an expert API testing engineer.
-Extract and summarize ONLY the errors found in the test results.
+Extract and analyze ALL errors found in the test results with thorough detail.
 
-For each error, identify:
-1. **Route/Endpoint**: The API path (e.g., POST /api/testing_agent)
-2. **Error Code**: HTTP status code (e.g., 500, 400, 422)
-3. **Input Cause**: Specific input that triggered the error (e.g., "empty email string", "null value in apiUrl")
-4. **GitHub Location**: File path and line number if available (e.g., validator.js:45)
-5. **Fix**: Brief, actionable solution (1-2 sentences max)
+For each error, provide:
+1. **Route/Endpoint**: The full API path (e.g., POST /api/testing_agent)
+2. **Error Code**: HTTP status code (e.g., 500, 400, 422) with meaning
+3. **Input Cause**: Detailed explanation of what input/condition triggered the error
+4. **GitHub Location**: File path and line number if available
+5. **Technical Context**: What went wrong technically (stack trace, error message)
+6. **Impact**: How this affects users/API functionality
+7. **Fix**: Detailed, actionable solution with code hints if relevant
 
-Be concise and direct. Skip any passing tests."""),
-        ("human", """Analyze these API test results and extract ONLY the errors:
+Be thorough and technical. Provide enough context so developers understand the full picture."""),
+        ("human", """Analyze these API test results and extract ALL errors with comprehensive details:
 
 === API TEST RESULTS ===
 {test_results}
 
-List each error with:
-- Route
-- Error Code
-- Input Cause
+For each error, provide:
+- Route/Endpoint
+- Error Code and its meaning
+- Detailed Input Cause (what data, why it broke)
 - GitHub Location (if provided)
-- Fix (brief)
+- Technical Context (error messages, stack traces)
+- User Impact
+- Detailed Fix (actionable steps)
 
-Skip successful tests.""")
+Skip successful tests but be thorough on failures.""")
     ])
     
     # Format the prompt with actual test data
@@ -87,26 +91,35 @@ Skip successful tests.""")
 
 def generate_email(analysis: str, recipient: str = "team@example.com") -> str:
     """
-    Generate a short, concise email based on the API test analysis.
+    Generate a professional HTML email formatted for Gmail with Recompile branding.
     """
     
     email_prompt = ChatPromptTemplate.from_messages([
-        ("system", """You are writing a SHORT, CONCISE technical email about API errors.
+        ("system", """You are writing a friendly, professional HTML email from a coworker about API testing errors.
 
-STRICT RULES:
-- Start with a 1-2 sentence summary (how many errors, overall severity)
-- Then list the errors in a clean format
-- No fluff, greetings, or sign-offs
+CRITICAL REQUIREMENTS:
+1. Start with Recompile header at the very top: <div class="email-header"><h1>Recompile</h1></div>
+2. Add a friendly greeting like "Hello, here is your report..." or "Hi there, your API test results are in..."
+3. Use proper HTML formatting with inline CSS for Gmail compatibility
+4. Use clean typography (Arial, sans-serif)
+5. Use bullet points (•) and proper indentation
+6. Use bold for emphasis on key terms
+7. Use subtle colors: red for errors, blue for info
+8. Tone: friendly coworker, not overly formal
 
-For each error, include ONLY:
-1. Route/Endpoint (e.g., POST /api/testing_agent)
-2. Error Code (e.g., 500, 400, etc.)
-3. Input Cause (what data triggered it - be specific)
-4. GitHub Location (file path and line number if available)
-5. Fix (1-2 sentence solution)
+HTML Structure:
+- Recompile header with styling (background, padding, centered text)
+- Friendly greeting paragraph
+- Brief summary (1-2 sentences)
+- Error details with bullet points and styling
+- Use <strong> for bold, <span style="color: #..."> for colors
+- Add proper spacing and margins
 
-Use bullet points or numbered list. Be direct."""),
-        ("human", """Create a SHORT email based on this API test analysis:
+For each error section:
+- Bold the route and error code
+- Use bullet points for details
+- Keep fix instructions clear and actionable"""),
+        ("human", """Create a Gmail-formatted HTML email based on this API test analysis:
 
 {analysis}
 
@@ -115,9 +128,19 @@ Recipient: {recipient}
 Format as:
 Subject: [Your subject line]
 ---
-[1-2 sentence summary]
+<div class="email-header" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 20px; text-align: center; margin-bottom: 20px;">
+  <h1 style="color: white; margin: 0; font-size: 28px; font-weight: 600;">Recompile</h1>
+</div>
 
-[List the errors - no greeting, no closing remarks]""")
+<div style="font-family: Arial, sans-serif; color: #333; line-height: 1.6; max-width: 600px;">
+  <p style="font-size: 16px;">[Friendly greeting like "Hello, here is your report..." or similar]</p>
+  <p style="font-size: 14px; color: #666;">[Brief summary]</p>
+  
+  <h3 style="color: #d32f2f; margin-top: 24px;">Errors Found:</h3>
+  [Error details with bullets, colors, and styling]
+</div>
+
+Make it feel like a helpful coworker sharing test results, not a formal report.""")
     ])
     
     messages = email_prompt.format_messages(
