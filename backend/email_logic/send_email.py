@@ -1,6 +1,4 @@
 import os
-import json
-from pathlib import Path
 from typing import Dict
 from dotenv import load_dotenv
 from agentmail import AgentMail
@@ -45,25 +43,3 @@ def send_email(email_data: Dict[str, str], recipient_email: str) -> str:
     
     print(f"✅ Message sent successfully with ID: {sent_message.message_id}")
     return sent_message.message_id
-
-
-def main():
-    """Load email JSON and send it."""
-    script_dir = Path(__file__).parent
-    email_json_path = script_dir / "email_output.json"
-    
-    # Load email data
-    print(f"📂 Loading email data from: {email_json_path}")
-    with open(email_json_path, 'r') as f:
-        email_data = json.load(f)
-    
-    # Send email
-    recipient = os.getenv("RECIPIENT_EMAIL", "benedictnursalim@gmail.com")
-    message_id = send_email(email_data, recipient)
-    
-    print(f"\n🎉 Email sent successfully!")
-    print(f"Message ID: {message_id}")
-
-
-if __name__ == "__main__":
-    main()
