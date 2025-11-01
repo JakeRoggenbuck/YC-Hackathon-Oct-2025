@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 from pydantic import BaseModel, EmailStr
+from email_logic.startup_email import send_agent_startup_email
 
 app = FastAPI()
 
@@ -26,10 +27,12 @@ async def start_agent(request: StartAgentRequest):
 
     # Mock for what Rani is making
     async def index_github_repo(github): pass
+
     index_name = await index_github_repo(request.github_repo)
 
-    # TODO: Call email when we start indexing
-    # TODO: Agent started! We'll send another email once it's complete
+    # Call email when we start indexing
+    # Agent started! We'll send another email once it's complete
+    send_agent_startup_email(request)
 
     # TODO: Call our email service when it's done
     # Maybe this should be in the agent and not the backend?
