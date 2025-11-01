@@ -76,9 +76,15 @@ export default function TestingForm({ onSuccess }: TestingFormProps) {
 
   const mutation = useMutation<any, Error, FormData>({
     mutationFn: async (payload: FormData) => {
-      // send form to dummy endpoint `/testing_agent`
+      // Send to backend endpoint - map frontend fields to backend expected names
+      const backendPayload = {
+        email: payload.email,
+        github_repo: payload.githubUrl,  // Backend expects github_repo
+        hosted_api_url: payload.apiUrl,  // Backend expects hosted_api_url
+      };
+      
       try {
-        const res = await apiRequest("POST", "/testing_agent", payload);
+        const res = await apiRequest("POST", "http://localhost:8000/start-agent", backendPayload);
         // try parse json if any
         try {
           return await res.json();
