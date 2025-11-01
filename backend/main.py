@@ -11,6 +11,12 @@ class StartAgentRequest(BaseModel):
 
 @app.post("/start-agent")
 def start_agent(request: StartAgentRequest):
+
+    # TODO: Start and agent that is on stand-by
+
+    # TODO: Call our email service when it's done
+    # Maybe this should be in the agent and not the backend?
+
     return {
         "status": "success",
         "message": "Agent started successfully",
