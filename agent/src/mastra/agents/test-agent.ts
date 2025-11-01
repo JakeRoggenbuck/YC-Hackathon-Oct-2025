@@ -26,6 +26,7 @@ export const apiTestingAgent = new Agent({
        - Unvalidated input
        - Missing error handling
        - Unhandled exceptions (raise/throw statements without proper try/catch)
+       - Python-specific errors: KeyError, IndexError, AttributeError, TypeError, ValueError, FileNotFoundError
        - Null pointer exceptions
        - SQL injection vulnerabilities
     4. Generate specific test cases with fetch commands to uncover each issue

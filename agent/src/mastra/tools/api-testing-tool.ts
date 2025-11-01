@@ -10,9 +10,10 @@ const getGitHubHeaders = (token?: string) => {
   if (token) {
     // GitHub API accepts both "token" and "Bearer" prefixes for personal access tokens
     // Use the token as-is if it already has a prefix, otherwise add "token" prefix
-    headers.Authorization = token.startsWith("Bearer ") || token.startsWith("token ")
-      ? token
-      : `token ${token}`;
+    headers.Authorization =
+      token.startsWith("Bearer ") || token.startsWith("token ")
+        ? token
+        : `token ${token}`;
   }
   return headers;
 };
@@ -181,7 +182,7 @@ export const githubCodeTool = createTool({
           const repoCheckResponse = await fetch(repoCheckUrl, {
             headers: getGitHubHeaders(githubToken),
           });
-          
+
           if (repoCheckResponse.status === 404) {
             return {
               success: false,
@@ -194,7 +195,7 @@ export const githubCodeTool = createTool({
               ],
             };
           }
-          
+
           if (repoCheckResponse.status === 403) {
             return {
               success: false,
@@ -209,7 +210,7 @@ export const githubCodeTool = createTool({
         } catch (repoCheckError) {
           // If repo check fails, continue with file not found error
         }
-        
+
         // Repository exists, but file path is likely incorrect
         return {
           success: false,
@@ -304,11 +305,11 @@ export const codeAnalysisTool = createTool({
     // Detect divide-by-zero vulnerabilities - only in actual mathematical operations
     // Look for patterns like: variable / divisor, number / variable, etc.
     // Exclude string literals, regex patterns, and route paths
-    
+
     // Remove comments and string literals from analysis to avoid false positives
     const codeWithoutStrings = code
-      .replace(/\/\/.*$/gm, '') // Remove single-line comments
-      .replace(/\/\*[\s\S]*?\*\//g, '') // Remove multi-line comments
+      .replace(/\/\/.*$/gm, "") // Remove single-line comments
+      .replace(/\/\*[\s\S]*?\*\//g, "") // Remove multi-line comments
       .replace(/"[^"]*"/g, '""') // Replace string literals with empty strings
       .replace(/'[^']*'/g, "''"); // Replace single-quoted strings
 
@@ -329,15 +330,19 @@ export const codeAnalysisTool = createTool({
         // Get the divisor (right side of division)
         const variable = match[2] || match[3];
         const fullMatch = match[0];
-        
+
         // Skip if this is clearly not a division operation (e.g., route paths, regex)
-        if (fullMatch.includes('"/') || fullMatch.includes("'/") || fullMatch.includes('/g')) {
+        if (
+          fullMatch.includes('"/') ||
+          fullMatch.includes("'/") ||
+          fullMatch.includes("/g")
+        ) {
           return;
         }
-        
+
         if (variable && !foundVariables.has(variable)) {
           // Check if there's any validation or check for this variable
-          const hasZeroCheck = 
+          const hasZeroCheck =
             code.includes(`${variable} === 0`) ||
             code.includes(`${variable} !== 0`) ||
             code.includes(`${variable} == 0`) ||
@@ -346,10 +351,19 @@ export const codeAnalysisTool = createTool({
             code.includes(`if(${variable}`) ||
             code.includes(`&& ${variable}`) ||
             code.includes(`|| ${variable}`);
-          
+
           // Only flag if no zero check exists and it's not a common safe variable name
-          const isLikelyDivisor = !['id', 'type', 'name', 'key', 'value', 'path', 'url', 'route'].includes(variable.toLowerCase());
-          
+          const isLikelyDivisor = ![
+            "id",
+            "type",
+            "name",
+            "key",
+            "value",
+            "path",
+            "url",
+            "route",
+          ].includes(variable.toLowerCase());
+
           if (!hasZeroCheck && isLikelyDivisor) {
             foundVariables.add(variable);
             issues.push({
@@ -366,11 +380,11 @@ export const codeAnalysisTool = createTool({
 
     // Detect unvalidated input - be more conservative
     // Only flag if there's direct use of user input in operations without validation
-    const hasUserInput = 
-      code.includes("req.query") || 
-      code.includes("req.params") || 
+    const hasUserInput =
+      code.includes("req.query") ||
+      code.includes("req.params") ||
       code.includes("req.body");
-    
+
     if (hasUserInput) {
       // Check for various validation patterns
       const hasValidation =
@@ -386,24 +400,28 @@ export const codeAnalysisTool = createTool({
         code.includes("isNaN") ||
         code.includes("typeof") ||
         code.includes("instanceof");
-      
+
       // Only flag if input is used in potentially dangerous operations without validation
-      const hasUnsafeOperations = 
-        code.match(/req\.(query|params|body)\.[a-zA-Z0-9_]+/g)?.some(match => {
-          const varName = match.split('.').pop();
-          return varName && (
-            code.includes(`${varName} /`) ||
-            code.includes(`/ ${varName}`) ||
-            code.includes(`eval(`) ||
-            code.includes(`exec(`)
-          );
-        }) || false;
-      
+      const hasUnsafeOperations =
+        code
+          .match(/req\.(query|params|body)\.[a-zA-Z0-9_]+/g)
+          ?.some((match) => {
+            const varName = match.split(".").pop();
+            return (
+              varName &&
+              (code.includes(`${varName} /`) ||
+                code.includes(`/ ${varName}`) ||
+                code.includes(`eval(`) ||
+                code.includes(`exec(`))
+            );
+          }) || false;
+
       if (hasUnsafeOperations && !hasValidation) {
         issues.push({
           type: "unvalidated-input",
           severity: "medium",
-          description: "User input used in operations without apparent validation",
+          description:
+            "User input used in operations without apparent validation",
         });
       }
     }
@@ -418,22 +436,32 @@ export const codeAnalysisTool = createTool({
       /\bthrow\s+[A-Za-z]/g, // JavaScript: throw variable
     ];
 
-    const hasRaiseThrow = raiseThrowPatterns.some(pattern => pattern.test(codeWithoutStrings));
-    
+    const hasRaiseThrow = raiseThrowPatterns.some((pattern) =>
+      pattern.test(codeWithoutStrings),
+    );
+
     if (hasRaiseThrow) {
       // Check if exceptions are within try/catch blocks
       // Simple check: count raise/throw statements and try/catch blocks
       const raiseMatches = codeWithoutStrings.match(/\braise\b/g);
       const throwMatches = codeWithoutStrings.match(/\bthrow\b/g);
-      const tryMatches = codeWithoutStrings.match(/\btry\s*{/g) || codeWithoutStrings.match(/\btry\s*:/g);
-      const catchMatches = codeWithoutStrings.match(/\bcatch\s*\(/g) || codeWithoutStrings.match(/\bexcept\s*:/g);
-      
-      const exceptionCount = (raiseMatches?.length || 0) + (throwMatches?.length || 0);
+      const tryMatches =
+        codeWithoutStrings.match(/\btry\s*{/g) ||
+        codeWithoutStrings.match(/\btry\s*:/g);
+      const catchMatches =
+        codeWithoutStrings.match(/\bcatch\s*\(/g) ||
+        codeWithoutStrings.match(/\bexcept\s*:/g);
+
+      const exceptionCount =
+        (raiseMatches?.length || 0) + (throwMatches?.length || 0);
       const tryCount = tryMatches?.length || 0;
       const catchCount = catchMatches?.length || 0;
-      
+
       // Flag if there are more exceptions than catch blocks
-      if (exceptionCount > 0 && (tryCount === 0 || catchCount === 0 || exceptionCount > catchCount)) {
+      if (
+        exceptionCount > 0 &&
+        (tryCount === 0 || catchCount === 0 || exceptionCount > catchCount)
+      ) {
         issues.push({
           type: "unhandled-exceptions",
           severity: "high",
@@ -444,28 +472,260 @@ export const codeAnalysisTool = createTool({
 
     // Detect missing error handling - be more conservative
     // Only flag if there are operations that could throw errors without handling
-    const hasAsyncOperations = 
-      code.includes("async") || 
-      code.includes("await") || 
+    const hasAsyncOperations =
+      code.includes("async") ||
+      code.includes("await") ||
       code.includes("Promise") ||
       code.includes(".then(") ||
       code.includes("fetch(") ||
       code.includes("axios") ||
       code.includes("database") ||
       code.includes("db.");
-    
+
     const hasErrorHandling =
       code.includes("try") ||
       code.includes("catch") ||
       code.includes(".catch(") ||
       code.includes("except");
-    
+
     // Only flag missing error handling if there are operations that could fail
     if (hasAsyncOperations && !hasErrorHandling) {
       issues.push({
         type: "missing-error-handling",
         severity: "medium",
         description: "Async operations detected without error handling",
+      });
+    }
+
+    // Detect common Python errors
+    const isPythonCode =
+      code.includes("def ") ||
+      code.includes("import ") ||
+      code.includes("from ") ||
+      code.includes(".py") ||
+      code.includes("if __name__") ||
+      code.includes("print(");
+
+    if (isPythonCode) {
+      // 1. KeyError: Dictionary access without .get() or 'in' check
+      // Pattern: dict[key] without dict.get(key) or key in dict check
+      const dictAccessPattern = /([a-zA-Z_][a-zA-Z0-9_]*)\[([^\]]+)\]/g;
+      const dictAccesses = [...codeWithoutStrings.matchAll(dictAccessPattern)];
+      const checkedDicts = new Set<string>();
+
+      dictAccesses.forEach((match) => {
+        const dictName = match[1];
+        const key = match[2];
+
+        // Skip if it's list indexing (not dict access) - simple heuristic
+        if (key.match(/^\d+$/)) {
+          return; // Likely list index, not dict key
+        }
+
+        // Check if this dict is safely accessed with .get() or 'in' check
+        const hasSafeAccess =
+          code.includes(`${dictName}.get(`) ||
+          code.includes(`if ${key} in ${dictName}`) ||
+          code.includes(`if "${key}" in ${dictName}`) ||
+          code.includes(`if '${key}' in ${dictName}`) ||
+          code.includes(`if ${dictName}.get(`) ||
+          checkedDicts.has(dictName);
+
+        if (!hasSafeAccess && !checkedDicts.has(dictName)) {
+          checkedDicts.add(dictName);
+          issues.push({
+            type: "python-keyerror",
+            severity: "medium",
+            description: `Dictionary access "${dictName}[${key}]" may raise KeyError if key doesn't exist. Consider using "${dictName}.get(${key})" or check with "in" operator.`,
+            variable: dictName,
+            code: match[0],
+          });
+        }
+      });
+
+      // 2. IndexError: List access without bounds checking
+      // Pattern: list[index] where index could be out of range
+      const listAccessPattern =
+        /([a-zA-Z_][a-zA-Z0-9_]*)\[([a-zA-Z_][a-zA-Z0-9_]*)\]/g;
+      const listAccesses = [...codeWithoutStrings.matchAll(listAccessPattern)];
+      const checkedLists = new Set<string>();
+
+      listAccesses.forEach((match) => {
+        const listName = match[1];
+        const indexVar = match[2];
+
+        // Skip if index is a literal number (probably safe)
+        if (indexVar.match(/^\d+$/)) {
+          return;
+        }
+
+        // Check if there's bounds checking
+        const hasBoundsCheck =
+          code.includes(`len(${listName})`) ||
+          code.includes(`if ${indexVar} < len(${listName})`) ||
+          code.includes(`if ${indexVar} < ${listName}.__len__`) ||
+          code.includes(`try:`) ||
+          checkedLists.has(listName);
+
+        if (!hasBoundsCheck && !checkedLists.has(listName)) {
+          checkedLists.add(listName);
+          issues.push({
+            type: "python-indexerror",
+            severity: "medium",
+            description: `List access "${listName}[${indexVar}]" may raise IndexError if index is out of range. Consider checking bounds with len() or use try/except.`,
+            variable: listName,
+            code: match[0],
+          });
+        }
+      });
+
+      // 3. AttributeError: Object attribute access without None check or hasattr()
+      // Pattern: obj.attr where obj could be None
+      const attrAccessPattern =
+        /([a-zA-Z_][a-zA-Z0-9_]*)\\.([a-zA-Z_][a-zA-Z0-9_]*)/g;
+      const attrAccesses = [...codeWithoutStrings.matchAll(attrAccessPattern)];
+      const checkedObjs = new Set<string>();
+
+      attrAccesses.forEach((match) => {
+        const objName = match[1];
+        const attrName = match[2];
+
+        // Skip common safe patterns
+        if (
+          ["self", "cls", "__class__", "__name__"].includes(objName) ||
+          ["__init__", "__str__", "__repr__"].includes(attrName)
+        ) {
+          return;
+        }
+
+        // Check if there's None check or hasattr()
+        const hasSafeAccess =
+          code.includes(`if ${objName} is not None`) ||
+          code.includes(`if ${objName} != None`) ||
+          code.includes(`hasattr(${objName}`) ||
+          code.includes(`getattr(${objName}`) ||
+          code.includes(`if ${objName}:`) ||
+          checkedObjs.has(objName);
+
+        if (!hasSafeAccess && !checkedObjs.has(objName)) {
+          checkedObjs.add(objName);
+          issues.push({
+            type: "python-attributeerror",
+            severity: "medium",
+            description: `Attribute access "${objName}.${attrName}" may raise AttributeError if ${objName} is None or doesn't have the attribute. Consider checking with "if ${objName} is not None" or using hasattr().`,
+            variable: objName,
+            code: match[0],
+          });
+        }
+      });
+
+      // 4. FileNotFoundError: File operations without try/except
+      const fileOperations = [
+        /open\s*\(/g,
+        /with\s+open\s*\(/g,
+        /read\s*\(/g,
+        /write\s*\(/g,
+      ];
+
+      const hasFileOps = fileOperations.some((pattern) =>
+        pattern.test(codeWithoutStrings),
+      );
+      if (
+        hasFileOps &&
+        !code.includes("try:") &&
+        !code.includes("except FileNotFoundError")
+      ) {
+        issues.push({
+          type: "python-filenotfounderror",
+          severity: "medium",
+          description:
+            "File operations detected without FileNotFoundError handling. Consider wrapping file operations in try/except FileNotFoundError.",
+        });
+      }
+
+      // 5. TypeError: Operations on potentially None values
+      // Check for method calls or operations on variables that could be None
+      const methodCallPattern =
+        /([a-zA-Z_][a-zA-Z0-9_]*)\\.([a-zA-Z_][a-zA-Z0-9_]*)\s*\(/g;
+      const methodCalls = [...codeWithoutStrings.matchAll(methodCallPattern)];
+      const checkedMethods = new Set<string>();
+
+      methodCalls.forEach((match) => {
+        const objName = match[1];
+
+        // Skip safe patterns
+        if (["self", "cls", "super"].includes(objName)) {
+          return;
+        }
+
+        // Check if obj is assigned from function that could return None
+        const couldBeNone =
+          code.includes(`${objName} = None`) ||
+          code.includes(`= ${objName}()`) ||
+          code.includes(`return ${objName}`);
+
+        // Skip if already checked or clearly not None
+        if (checkedMethods.has(objName) || !couldBeNone) {
+          return;
+        }
+
+        // Check if there's a None check before this method call
+        const hasNoneCheck =
+          code.includes(`if ${objName} is not None`) ||
+          code.includes(`if ${objName} != None`) ||
+          code.includes(`assert ${objName} is not None`) ||
+          code.includes(`if ${objName}:`);
+
+        if (!hasNoneCheck) {
+          checkedMethods.add(objName);
+          issues.push({
+            type: "python-typeerror",
+            severity: "high",
+            description: `Method call on "${objName}" may raise TypeError if ${objName} is None. Consider adding a None check before calling methods.`,
+            variable: objName,
+            code: match[0],
+          });
+        }
+      });
+
+      // 6. ValueError: Type conversions without validation
+      // Pattern: int(), float() on potentially invalid input
+      const conversionPatterns = [
+        /int\s*\(([a-zA-Z_][a-zA-Z0-9_]*)\)/g,
+        /float\s*\(([a-zA-Z_][a-zA-Z0-9_]*)\)/g,
+      ];
+
+      conversionPatterns.forEach((pattern) => {
+        const conversions = [...codeWithoutStrings.matchAll(pattern)];
+        conversions.forEach((match) => {
+          const varName = match[1];
+
+          // Check if there's validation
+          const hasValidation =
+            code.includes(`try:`) ||
+            code.includes(`isinstance(${varName}`) ||
+            code.includes(`type(${varName})`) ||
+            code.includes(`str(${varName}).isdigit()`) ||
+            code.includes(`if ${varName}.isdigit()`);
+
+          // Check if it's user input
+          const isUserInput =
+            code.includes(`request.`) ||
+            code.includes(`req.`) ||
+            code.includes(`form[`) ||
+            code.includes(`args[`) ||
+            code.includes(`query[`);
+
+          if (!hasValidation && isUserInput) {
+            issues.push({
+              type: "python-valueerror",
+              severity: "medium",
+              description: `Type conversion on "${varName}" may raise ValueError if input is invalid. Consider validating input or using try/except ValueError.`,
+              variable: varName,
+              code: match[0],
+            });
+          }
+        });
       });
     }
 
@@ -481,7 +741,8 @@ export const codeAnalysisTool = createTool({
 // Tool to generate test cases
 export const testCaseGeneratorTool = createTool({
   id: "test-case-generator",
-  description: "Generates fetch commands to test discovered issues in the API. Only generates tests for issues that were actually detected by the code analyzer. Returns empty test cases array if no valid issues are provided.",
+  description:
+    "Generates fetch commands to test discovered issues in the API. Only generates tests for issues that were actually detected by the code analyzer. Returns empty test cases array if no valid issues are provided.",
   inputSchema: z.object({
     baseUrl: z
       .string()
@@ -590,7 +851,8 @@ export const testCaseGeneratorTool = createTool({
               url: `${baseUrl}${route}`,
               method: "GET",
               params: { invalid: "data" },
-              expectedBehavior: "Should catch and handle exceptions gracefully instead of crashing",
+              expectedBehavior:
+                "Should catch and handle exceptions gracefully instead of crashing",
             },
             curlCommand: `curl "${baseUrl}${route}?invalid=data"`,
           });
@@ -603,7 +865,8 @@ export const testCaseGeneratorTool = createTool({
               url: `${baseUrl}${route}`,
               method: "GET",
               params: {},
-              expectedBehavior: "Should handle missing required parameters without unhandled exceptions",
+              expectedBehavior:
+                "Should handle missing required parameters without unhandled exceptions",
             },
             curlCommand: `curl "${baseUrl}${route}"`,
           });
@@ -623,6 +886,124 @@ export const testCaseGeneratorTool = createTool({
               expectedBehavior: "Should handle errors gracefully",
             },
             curlCommand: `curl "${baseUrl}${route}?trigger=error"`,
+          });
+          break;
+
+        case "python-keyerror":
+          // Test with missing dictionary key
+          if (issue.variable) {
+            testCases.push({
+              id: `test-${index + 1}`,
+              name: `KeyError Test - Missing Key in ${issue.variable}`,
+              issue: issue.type,
+              severity: issue.severity || "medium",
+              fetchCommand: {
+                url: `${baseUrl}${route}`,
+                method: "GET",
+                params: { [issue.variable]: "nonexistent_key" },
+                expectedBehavior:
+                  "Should handle missing dictionary keys gracefully (use .get() or check with 'in')",
+              },
+              curlCommand: `curl "${baseUrl}${route}?${issue.variable}=nonexistent_key"`,
+            });
+          }
+          break;
+
+        case "python-indexerror":
+          // Test with out-of-range list index
+          if (issue.variable) {
+            testCases.push({
+              id: `test-${index + 1}`,
+              name: `IndexError Test - Out of Range for ${issue.variable}`,
+              issue: issue.type,
+              severity: issue.severity || "medium",
+              fetchCommand: {
+                url: `${baseUrl}${route}`,
+                method: "GET",
+                params: { index: "99999" },
+                expectedBehavior:
+                  "Should handle out-of-range list indices gracefully",
+              },
+              curlCommand: `curl "${baseUrl}${route}?index=99999"`,
+            });
+          }
+          break;
+
+        case "python-attributeerror":
+          // Test with None object
+          if (issue.variable) {
+            testCases.push({
+              id: `test-${index + 1}`,
+              name: `AttributeError Test - None Object ${issue.variable}`,
+              issue: issue.type,
+              severity: issue.severity || "medium",
+              fetchCommand: {
+                url: `${baseUrl}${route}`,
+                method: "GET",
+                params: { [issue.variable]: "null" },
+                expectedBehavior:
+                  "Should handle None objects gracefully before accessing attributes",
+              },
+              curlCommand: `curl "${baseUrl}${route}?${issue.variable}=null"`,
+            });
+          }
+          break;
+
+        case "python-typeerror":
+          // Test with None value
+          if (issue.variable) {
+            testCases.push({
+              id: `test-${index + 1}`,
+              name: `TypeError Test - None Value for ${issue.variable}`,
+              issue: issue.type,
+              severity: issue.severity || "high",
+              fetchCommand: {
+                url: `${baseUrl}${route}`,
+                method: "GET",
+                params: { [issue.variable]: "null" },
+                expectedBehavior:
+                  "Should check for None before calling methods to avoid TypeError",
+              },
+              curlCommand: `curl "${baseUrl}${route}?${issue.variable}=null"`,
+            });
+          }
+          break;
+
+        case "python-valueerror":
+          // Test with invalid type conversion input
+          if (issue.variable) {
+            testCases.push({
+              id: `test-${index + 1}`,
+              name: `ValueError Test - Invalid Input for ${issue.variable}`,
+              issue: issue.type,
+              severity: issue.severity || "medium",
+              fetchCommand: {
+                url: `${baseUrl}${route}`,
+                method: "GET",
+                params: { [issue.variable]: "not-a-number" },
+                expectedBehavior:
+                  "Should validate input before type conversion or catch ValueError",
+              },
+              curlCommand: `curl "${baseUrl}${route}?${issue.variable}=not-a-number"`,
+            });
+          }
+          break;
+
+        case "python-filenotfounderror":
+          // Test with file operations
+          testCases.push({
+            id: `test-${index + 1}`,
+            name: "FileNotFoundError Test",
+            issue: issue.type,
+            severity: issue.severity || "medium",
+            fetchCommand: {
+              url: `${baseUrl}${route}`,
+              method: "GET",
+              params: { file: "nonexistent_file.txt" },
+              expectedBehavior:
+                "Should handle missing files gracefully with try/except FileNotFoundError",
+            },
+            curlCommand: `curl "${baseUrl}${route}?file=nonexistent_file.txt"`,
           });
           break;
       }
@@ -737,23 +1118,29 @@ export const testExecutorTool = createTool({
           }
         } else if (testCase.issue === "unhandled-exceptions") {
           // Check for unhandled exceptions (500 errors or exception traces)
-          const responseText = typeof responseBody === "string" ? responseBody : JSON.stringify(responseBody);
-          const hasExceptionTrace = 
+          const responseText =
+            typeof responseBody === "string"
+              ? responseBody
+              : JSON.stringify(responseBody);
+          const hasExceptionTrace =
             responseText.includes("Traceback") ||
             responseText.includes("Exception:") ||
             responseText.includes("Error:") ||
             responseText.includes("at ") ||
             responseText.includes("stack trace");
-          
+
           if (response.status === 500 && hasExceptionTrace) {
             testResult.passed = false;
-            testResult.analysis = "🔴 ISSUE CONFIRMED: Unhandled exception detected - API returns 500 with exception trace";
+            testResult.analysis =
+              "🔴 ISSUE CONFIRMED: Unhandled exception detected - API returns 500 with exception trace";
           } else if (response.status === 500) {
             testResult.passed = false;
-            testResult.analysis = "🔴 ISSUE CONFIRMED: Unhandled exception detected - API returns 500 error";
+            testResult.analysis =
+              "🔴 ISSUE CONFIRMED: Unhandled exception detected - API returns 500 error";
           } else if (response.status >= 400 && response.status < 500) {
             testResult.passed = true;
-            testResult.analysis = "✅ PASS: API handles exceptions gracefully (returns proper error response)";
+            testResult.analysis =
+              "✅ PASS: API handles exceptions gracefully (returns proper error response)";
           } else {
             testResult.passed = true;
             testResult.analysis = "✅ PASS: No unhandled exceptions detected";
@@ -764,6 +1151,37 @@ export const testExecutorTool = createTool({
             response.status < 500
               ? "✅ PASS: No server error detected"
               : "🔴 ISSUE CONFIRMED: Server error occurred (may indicate missing error handling)";
+        } else if (testCase.issue.startsWith("python-")) {
+          // Python-specific error detection
+          const responseText =
+            typeof responseBody === "string"
+              ? responseBody
+              : JSON.stringify(responseBody);
+          const errorType = testCase.issue.replace("python-", "");
+
+          const hasErrorTrace =
+            responseText.includes("KeyError") ||
+            responseText.includes("IndexError") ||
+            responseText.includes("AttributeError") ||
+            responseText.includes("TypeError") ||
+            responseText.includes("ValueError") ||
+            responseText.includes("FileNotFoundError") ||
+            responseText.includes("Traceback") ||
+            responseText.includes(errorType);
+
+          if (response.status === 500 && hasErrorTrace) {
+            testResult.passed = false;
+            testResult.analysis = `🔴 ISSUE CONFIRMED: ${errorType} detected - API returns 500 with error trace`;
+          } else if (response.status === 500) {
+            testResult.passed = false;
+            testResult.analysis = `🔴 ISSUE CONFIRMED: ${errorType} may have occurred - API returns 500 error`;
+          } else if (response.status >= 400 && response.status < 500) {
+            testResult.passed = true;
+            testResult.analysis = `✅ PASS: API handles ${errorType} gracefully (returns proper error response)`;
+          } else {
+            testResult.passed = true;
+            testResult.analysis = `✅ PASS: No ${errorType} detected`;
+          }
         } else {
           testResult.passed = response.status < 500;
           testResult.analysis =

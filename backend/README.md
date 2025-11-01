@@ -1,8 +1,55 @@
-# Start Agent API Documentation
+=======
+# Backend - Agent Manager
 
-## Endpoint
+FastAPI service that manages agent lifecycle and handles email summaries for API testing results.
 
-**POST** `/start-agent`
+## Overview
+
+The backend serves as the orchestration layer between the frontend UI and the testing agents. It receives agent configuration requests, starts agents, and coordinates the email summary service.
+
+## Tech Stack
+
+- **FastAPI** for REST API
+- **Python 3.x**
+- **AgentMail** for email notifications
+- **LangChain** with Google GenAI for agent integration
+
+## Getting Started
+
+```bash
+# Create and run the virtual environment
+python -m venv venv
+source venv/bin/activate  # On Linux/Mac
+
+# Install dependencies
+pip install -r requirements.txt
+
+# For puller.py file since it uses GitHub API and is rate limited
+Generate a Github Personal Access Token with public_repo scope for more Github API requests - 5,000 per hour after adding access token.
+
+# Run the server
+python main.py
+# or
+uvicorn main:app --reload
+```
+
+The API will be available at `http://localhost:8000`.
+
+## Project Structure
+
+```
+backend/
+├── main.py                    # FastAPI application entry point
+├── email_logic/               # Email generation and sending
+│   ├── generate_email.py      # Email template generation
+│   ├── send_email.py          # Email dispatch logic
+│   └── pipeline.py            # Email processing pipeline
+└── requirements.txt
+```
+
+## API Endpoints
+
+### POST `/start-agent`
 
 Starts an agent with the provided configuration.
 
@@ -169,3 +216,4 @@ curl -X POST http://localhost:8000/start-agent \
 - `200` - Success
 - `422` - Validation Error (invalid email, missing fields, etc.)
 - `500` - Internal Server Error
+>>>>>>> main

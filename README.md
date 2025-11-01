@@ -1,5 +1,14 @@
 # YC-Hackathon-Oct-2025
 
+[![Python](https://img.shields.io/badge/Python-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org/)
+[![TypeScript](https://img.shields.io/badge/typescript-%23007ACC.svg?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+
+![Static Badge](https://img.shields.io/badge/Convex-orange?style=for-the-badge)
+![Static Badge](https://img.shields.io/badge/Moss-purple?style=for-the-badge)
+![Static Badge](https://img.shields.io/badge/AgentMail-orange?style=for-the-badge)
+![Static Badge](https://img.shields.io/badge/Mastra-purple?style=for-the-badge)
+![Static Badge](https://img.shields.io/badge/Hyperspell-orange?style=for-the-badge)
+
 Agentically scan for bugs in FastAPI backend servers.
 
 ## Contributors
@@ -42,7 +51,15 @@ Starts an agent with the provided configuration.
 
 #### 3. Email Summary Service
 
-Send an email summary with Agent Mail. 
+Send an email summary with Agent Mail.
+
+##### Email on startup
+
+<img width="1634" height="892" alt="image" src="https://github.com/user-attachments/assets/8fd3fa7e-0b13-40f0-8e5d-b24fef088172" />
+
+##### Email when agent is done
+
+<img width="1602" height="870" alt="image" src="https://github.com/user-attachments/assets/8d0020a1-1ac8-460d-af8b-c0c9ba2836a6" />
 
 #### 4. The Agents
 
@@ -51,6 +68,9 @@ We will use [Mastra](https://mastra.ai) to write our agents. They will use [Moss
 They will use the provided API url and look for a openapi.json to know what routes to call. It can remember this with Hyperspell.
 
 The semantic search with the source aware GitHub pulling. If we want to test an endpoint called "/test", we can use either Moss or Convex to pull up the relevant code to augment our result.
+
+#### Engineering Notes
+- Max of 500 .py files in Moss agent for now, can be scaled later but kept at a respectable size right now to minimize system latency.
 
 <img width="721" height="738" alt="image" src="https://github.com/user-attachments/assets/adc30cd0-29e2-416f-840c-129bc9b849be" />
 
