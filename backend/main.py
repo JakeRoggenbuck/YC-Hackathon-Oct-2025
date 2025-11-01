@@ -20,9 +20,16 @@ def broken_route(x: int):
 
 
 @app.post("/start-agent")
-def start_agent(request: StartAgentRequest):
+async def start_agent(request: StartAgentRequest):
 
     # TODO: Start and agent that is on stand-by
+
+    # Mock for what Rani is making
+    async def index_github_repo(github): pass
+    index_name = await index_github_repo(request.github_repo)
+
+    # TODO: Call email when we start indexing
+    # TODO: Agent started! We'll send another email once it's complete
 
     # TODO: Call our email service when it's done
     # Maybe this should be in the agent and not the backend?
