@@ -13,24 +13,27 @@ from send_email import send_email
 load_dotenv()
 
 
-def run_email_pipeline(test_results_path: str, recipient_email: str):
+def run_email_pipeline(test_results: str, recipient_email: str):
     """
     Complete pipeline:
-    1. Read test results
+    1. Process test results (accepts JSON, text, or any string)
     2. Analyze with AI
     3. Generate email JSON
     4. Validate JSON
     5. Send email
+    
+    Args:
+        test_results: String containing test results (can be JSON, plain text, or any format)
+        recipient_email: Email address to send the results to
     """
     print("=" * 60)
     print("🚀 RECOMPILE EMAIL PIPELINE")
     print("=" * 60)
     print()
     
-    # Step 1: Read test results
-    print("📂 Step 1: Reading test results...")
-    test_results = read_file(test_results_path)
-    print(f"   ✅ Read {len(test_results)} characters")
+    # Step 1: Process test results
+    print("📂 Step 1: Processing test results...")
+    print(f"   ✅ Received {len(test_results)} characters")
     print()
     
     # Step 2: Analyze with AI
@@ -71,7 +74,9 @@ def main():
     test_results_path = str(script_dir / "test_results.txt")
     recipient_email = os.getenv("RECIPIENT_EMAIL", "benedictnursalim@gmail.com")
 
-    result = run_email_pipeline(test_results_path, recipient_email)
+    # Read the test results file
+    test_results = read_file(test_results_path)
+    result = run_email_pipeline(test_results, recipient_email)
 
     print("\n📊 Summary:")
     print(f"   Subject: {result['subject']}")
