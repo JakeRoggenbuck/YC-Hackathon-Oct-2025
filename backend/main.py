@@ -65,11 +65,11 @@ def broken_route(x: int):
 async def start_agent(request: StartAgentRequest):
     # Create Moss index for GitHub project
 
-    # Default value for request
-    request_id = request
+    # Default value for request_id
+    request_id = None
 
     if WRITE_CONVEX:
-        request_id = convex.mutation(
+        mutation_result = convex.mutation(
             "agentRequests:insertRequest",
             {
                 "email": request.email,
@@ -77,6 +77,7 @@ async def start_agent(request: StartAgentRequest):
                 "githubUrl": request.github_repo,
             },
         )
+        request_id = str(mutation_result)
 
     if RUN_MOSS:
         index_name = await index_github_repo(request.github_repo)
@@ -98,7 +99,7 @@ async def start_agent(request: StartAgentRequest):
 
 @app.post("/store-result")
 def store_result(request: StoreResultRequest):
-    result_id = convex.mutation(
+    mutation_result = convex.mutation(
         "agentResults:insertResult",
         {
             "requestId": request.request_id,
@@ -108,6 +109,7 @@ def store_result(request: StoreResultRequest):
             "resultSummary": request.result_summary,
         },
     )
+    result_id = str(mutation_result)
 
     return {
         "status": "success",
@@ -126,7 +128,7 @@ def get_results(email: str):
 async def run_pipeline(request: RunPipelineRequest):
     """
     Run the AI pipeline on existing test results from Convex database.
-    
+
     This endpoint:
     1. Fetches existing results for the email from Convex
     2. Uses the resultSummary as test results input
@@ -137,32 +139,32 @@ async def run_pipeline(request: RunPipelineRequest):
     try:
         # Fetch existing results from Convex using the email from request body
         results_response = convex.query("agentResults:getResultsByEmail", {"email": request.email})
-        
+
         if not results_response or len(results_response) == 0:
             return {
                 "status": "error",
                 "message": f"No results found for email: {request.email}",
                 "error": "No test results available to process"
             }
-        
+
         # Get the most recent result (first one in the array)
         latest_result = results_response[0]
         test_results = latest_result.get("resultSummary", "")
         hosted_api_url = latest_result.get("hostedApiUrl", "")
         github_url = latest_result.get("githubUrl", request.github_repo)
-        
+
         if not test_results:
             return {
                 "status": "error",
                 "message": "No test results summary found in the latest result",
                 "error": "resultSummary is empty or missing"
             }
-        
+
         print(f"📊 Processing results for {request.email}")
         print(f"   Test results length: {len(test_results)} characters")
         print(f"   GitHub repo: {github_url}")
         print(f"   API URL: {hosted_api_url}")
-        
+
         # Run the AI pipeline with the resultSummary as test_results
         pipeline_result = await run_ai_pipeline(
             test_results=test_results,
@@ -171,9 +173,9 @@ async def run_pipeline(request: RunPipelineRequest):
             hosted_api_url=hosted_api_url,
             create_github_issues=request.create_github_issues,
         )
-        
+
         print(f"✅ Pipeline completed successfully")
-        
+
         return {
             "status": "success",
             "message": "Pipeline executed successfully",
@@ -188,12 +190,12 @@ async def run_pipeline(request: RunPipelineRequest):
                 "emailSent": pipeline_result.get("email_sent", False),
             }
         }
-        
+
     except Exception as e:
         import traceback
         error_trace = traceback.format_exc()
         print(f"❌ Pipeline error: {error_trace}")
-        
+
         return {
             "status": "error",
             "message": f"Pipeline execution failed: {str(e)}",

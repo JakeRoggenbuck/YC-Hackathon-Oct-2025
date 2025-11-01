@@ -12,6 +12,7 @@ import {
   fetchUnstartedRequestsTool,
   processNextRequestTool,
   markRequestAsStartedTool,
+  insertAgentResultTool,
 } from "../tools/convex-connection";
 import { scorers } from "../scorers/api-testing-scorer";
 
@@ -42,6 +43,7 @@ export const apiTestingAgent = new Agent({
     4. Generate specific test cases with fetch commands to uncover each issue
     5. Execute the test cases against the live API
     6. Report which issues were confirmed and provide detailed analysis
+    7. When your analysis is complete, use insert-agent-result to store your findings in Convex. You must call this tool with the requestId, email, githubUrl, hostedApiUrl, and a comprehensive resultSummary of your analysis.
     
     When responding:
     - If you encounter "Not Found" errors, use github-repository-explorer to explore the repository structure first
@@ -68,6 +70,7 @@ export const apiTestingAgent = new Agent({
     fetchUnstartedRequestsTool,
     processNextRequestTool,
     markRequestAsStartedTool,
+    insertAgentResultTool,
   },
   scorers: {
     issueDetectionAccuracy: {
