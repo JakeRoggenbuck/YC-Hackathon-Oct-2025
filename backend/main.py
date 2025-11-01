@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 from pydantic import BaseModel, EmailStr
 from email_logic.startup_email import send_agent_startup_email
+from moss_indexer import index_github_repo
 
 app = FastAPI()
 
@@ -22,17 +23,13 @@ def broken_route(x: int):
 
 @app.post("/start-agent")
 async def start_agent(request: StartAgentRequest):
-
-    # TODO: Start and agent that is on stand-by
-
-    # Mock for what Rani is making
-    async def index_github_repo(github): pass
-
+    # Create Moss index for GitHub project
     index_name = await index_github_repo(request.github_repo)
+    print(index_name)
 
     # Call email when we start indexing
     # Agent started! We'll send another email once it's complete
-    send_agent_startup_email(request)
+    send_agent_startup_email(request.email, request.hosted_api_url, request.github_repo)
 
     # TODO: Call our email service when it's done
     # Maybe this should be in the agent and not the backend?
