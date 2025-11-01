@@ -175,15 +175,52 @@ export const githubCodeTool = createTool({
       });
 
       if (response.status === 404) {
+        // First, check if the repository itself exists by trying to access the root
+        try {
+          const repoCheckUrl = `https://api.github.com/repos/${repoOwner}/${repoName}`;
+          const repoCheckResponse = await fetch(repoCheckUrl, {
+            headers: getGitHubHeaders(githubToken),
+          });
+          
+          if (repoCheckResponse.status === 404) {
+            return {
+              success: false,
+              error: `Repository not found: ${repoOwner}/${repoName}`,
+              code: null,
+              suggestions: [
+                "The repository does not exist or the owner/name is incorrect.",
+                "Verify the repository owner and name are correct.",
+                "If the repository is private, you may need to provide a GitHub token.",
+              ],
+            };
+          }
+          
+          if (repoCheckResponse.status === 403) {
+            return {
+              success: false,
+              error: `Access forbidden to repository: ${repoOwner}/${repoName}`,
+              code: null,
+              suggestions: [
+                "This repository appears to be private. Provide a GitHub personal access token via the githubToken parameter.",
+                "Create a token at: https://github.com/settings/tokens",
+              ],
+            };
+          }
+        } catch (repoCheckError) {
+          // If repo check fails, continue with file not found error
+        }
+        
+        // Repository exists, but file path is likely incorrect
         return {
           success: false,
-          error: `File not found: ${filePath}`,
+          error: `File not found at path: ${filePath}`,
           code: null,
           suggestions: [
-            `The file path "${filePath}" was not found in the repository.`,
-            `Try using github-repository-explorer to list repository contents and find the correct file path.`,
-            "Common paths to check: src/routes, app/routes, routes, api, src/api",
-            "If the repository is private, provide a GitHub token via the githubToken parameter",
+            `The file path "${filePath}" was not found in the repository "${repoOwner}/${repoName}".`,
+            `The repository exists, so the file path is likely incorrect.`,
+            `Use github-repository-explorer tool with repoOwner="${repoOwner}", repoName="${repoName}" to explore the repository structure and find the correct file path.`,
+            `Common paths to check: src/routes, app/routes, routes, api, src/api, backend/routes`,
+            `You can start by exploring the root directory (empty directoryPath) or try common route directories.`,
           ],
         };
       }
