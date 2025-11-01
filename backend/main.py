@@ -9,13 +9,14 @@ from email_logic.startup_email import send_agent_startup_email
 # from moss_indexer import index_github_repo
 
 # Load .env from project root
-env_path = Path(__file__).parent.parent / '.env'
+env_path = Path(__file__).parent.parent / ".env"
 load_dotenv(env_path)
 
 app = FastAPI()
 
 CONVEX_URL = os.getenv("CONVEX_URL")
 convex = ConvexClient(CONVEX_URL)
+
 
 class StartAgentRequest(BaseModel):
     email: EmailStr
@@ -36,12 +37,14 @@ def broken_route(x: int):
 async def start_agent(request: StartAgentRequest):
     # Create Moss index for GitHub project
 
-    request_id = convex.mutation("agentRequests:insertRequest",
-                {
-                    "email": request.email,
-                    "hostedApiUrl": request.hosted_api_url,
-                    "githubUrl": request.github_repo
-                })
+    request_id = convex.mutation(
+        "agentRequests:insertRequest",
+        {
+            "email": request.email,
+            "hostedApiUrl": request.hosted_api_url,
+            "githubUrl": request.github_repo,
+        },
+    )
 
     # Mock for what Rani is making
     # async def index_github_repo(github): pass
@@ -59,9 +62,11 @@ async def start_agent(request: StartAgentRequest):
     return {
         "status": "success",
         "message": "Agent started successfully",
-        "requestId": request_id
+        "requestId": request_id,
     }
+
 
 if __name__ == "__main__":
     import uvicorn
+
     uvicorn.run(app, host="0.0.0.0", port=8000)
