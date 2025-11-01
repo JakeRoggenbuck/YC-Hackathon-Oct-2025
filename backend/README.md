@@ -1,8 +1,47 @@
-# Start Agent API Documentation
+# Backend - Agent Manager
 
-## Endpoint
+FastAPI service that manages agent lifecycle and handles email summaries for API testing results.
 
-**POST** `/start-agent`
+## Overview
+
+The backend serves as the orchestration layer between the frontend UI and the testing agents. It receives agent configuration requests, starts agents, and coordinates the email summary service.
+
+## Tech Stack
+
+- **FastAPI** for REST API
+- **Python 3.x**
+- **AgentMail** for email notifications
+- **LangChain** with Google GenAI for agent integration
+
+## Getting Started
+
+```bash
+# Install dependencies
+pip install -r requirements.txt
+
+# Run the server
+python main.py
+# or
+uvicorn main:app --reload
+```
+
+The API will be available at `http://localhost:8000`.
+
+## Project Structure
+
+```
+backend/
+├── main.py                    # FastAPI application entry point
+├── email_logic/               # Email generation and sending
+│   ├── generate_email.py      # Email template generation
+│   ├── send_email.py          # Email dispatch logic
+│   └── pipeline.py            # Email processing pipeline
+└── requirements.txt
+```
+
+## API Endpoints
+
+### POST `/start-agent`
 
 Starts an agent with the provided configuration.
 
