@@ -159,24 +159,30 @@ export const insertAgentResultTool = createTool({
     hostedApiUrl: z.string().describe("The hosted API URL that was tested"),
     resultSummary: z.string().describe("A comprehensive summary of the analysis results, including issues found, test results, and recommendations"),
   }),
-  outputSchema: z.object({
-    success: z.boolean(),
-    resultId: z.string().optional(),
-    error: z.string().optional(),
-  }),
+  outputSchema: z.union([
+    z.object({
+      success: z.boolean(),
+      resultId: z.string().optional(),
+      error: z.string().optional(),
+    }),
+    z.string(), // Allow string return in case of JSON conversion errors
+  ]),
   execute: async (args) => {
     try {
-      // Log what we receive to debug
-      console.log("insert-agent-result tool called with args:", JSON.stringify(args, null, 2));
+      // Log what we receive to debug - catch JSON conversion errors
+      try {
+        console.log("insert-agent-result tool called with args:", JSON.stringify(args, null, 2));
+      } catch (jsonError: any) {
+        console.log("insert-agent-result tool called with args (could not stringify):", String(args));
+      }
       
       if (!args || typeof args !== 'object') {
-        return {
-          success: false,
-          error: `Invalid args: ${typeof args}. Expected object.`,
-        };
+        return `Invalid args: ${typeof args}. Expected object.`;
       }
 
-      const { requestId, email, githubUrl, hostedApiUrl, resultSummary } = args;
+      // Extract arguments from context if they're nested, otherwise use args directly
+      const actualArgs = (args as any).context || args;
+      const { requestId, email, githubUrl, hostedApiUrl, resultSummary } = actualArgs;
       
       // Validate all required parameters are present
       const missing = [];
@@ -188,27 +194,34 @@ export const insertAgentResultTool = createTool({
       
       if (missing.length > 0) {
         console.error("Missing required parameters:", missing);
-        console.error("Received args keys:", Object.keys(args));
-        console.error("Args values:", { 
-          requestId: !!requestId, 
-          email: !!email, 
-          githubUrl: !!githubUrl, 
-          hostedApiUrl: !!hostedApiUrl, 
-          resultSummary: !!resultSummary 
-        });
-        return {
-          success: false,
-          error: `Missing required parameters: ${missing.join(', ')}. Received keys: ${Object.keys(args).join(', ')}`,
-        };
+        try {
+          console.error("Received args keys:", Object.keys(args));
+          console.error("Extracted actualArgs keys:", actualArgs ? Object.keys(actualArgs) : 'actualArgs is null/undefined');
+          console.error("Args values:", { 
+            requestId: !!requestId, 
+            email: !!email, 
+            githubUrl: !!githubUrl, 
+            hostedApiUrl: !!hostedApiUrl, 
+            resultSummary: !!resultSummary 
+          });
+        } catch (jsonError) {
+          console.error("Could not log args due to JSON conversion error");
+        }
+        const receivedKeys = actualArgs ? Object.keys(actualArgs).join(', ') : 'none';
+        return `Missing required parameters: ${missing.join(', ')}. Extracted keys from args: ${receivedKeys}`;
       }
 
-      console.log("Calling Convex mutation with parameters:", {
-        requestId,
-        email,
-        githubUrl,
-        hostedApiUrl,
-        resultSummaryLength: resultSummary?.length || 0,
-      });
+      try {
+        console.log("Calling Convex mutation with parameters:", {
+          requestId,
+          email,
+          githubUrl,
+          hostedApiUrl,
+          resultSummaryLength: resultSummary?.length || 0,
+        });
+      } catch (jsonError) {
+        console.log("Calling Convex mutation (could not log parameters due to JSON conversion error)");
+      }
 
       const client = getConvexClient();
       const mutationArgs = {
@@ -219,23 +232,33 @@ export const insertAgentResultTool = createTool({
         resultSummary: String(resultSummary),
       };
       
-      console.log("Mutation args being sent:", mutationArgs);
+      try {
+        console.log("Mutation args being sent:", mutationArgs);
+      } catch (jsonError) {
+        console.log("Mutation args being sent (could not log due to JSON conversion error)");
+      }
       
       const resultId = await client.mutation("agentResults:insertResult" as any, mutationArgs);
 
-      console.log(`Agent result written to Convex with ID: ${resultId}`);
+      console.log(`Agent result written to Convex with ID: ${String(resultId)}`);
       
-      return {
-        success: true,
-        resultId,
-      };
+      try {
+        return {
+          success: true,
+          resultId: String(resultId),
+        };
+      } catch (jsonError: any) {
+        // If we can't return structured JSON, return a string
+        return `Success: Agent result written to Convex with ID: ${String(resultId)}`;
+      }
     } catch (error: any) {
       console.error("Error inserting agent result:", error);
-      console.error("Error stack:", error.stack);
-      return {
-        success: false,
-        error: error.message || "Failed to insert agent result",
-      };
+      if (error.stack) {
+        console.error("Error stack:", error.stack);
+      }
+      // Return error as string instead of structured JSON
+      const errorMessage = error.message || String(error) || "Failed to insert agent result";
+      return `Error: ${errorMessage}`;
     }
   },
 });

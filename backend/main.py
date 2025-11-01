@@ -48,11 +48,11 @@ def broken_route(x: int):
 async def start_agent(request: StartAgentRequest):
     # Create Moss index for GitHub project
 
-    # Default value for request
-    request_id = request
+    # Default value for request_id
+    request_id = None
 
     if WRITE_CONVEX:
-        request_id = convex.mutation(
+        mutation_result = convex.mutation(
             "agentRequests:insertRequest",
             {
                 "email": request.email,
@@ -60,6 +60,7 @@ async def start_agent(request: StartAgentRequest):
                 "githubUrl": request.github_repo,
             },
         )
+        request_id = str(mutation_result)
 
     if RUN_MOSS:
         index_name = await index_github_repo(request.github_repo)
@@ -81,7 +82,7 @@ async def start_agent(request: StartAgentRequest):
 
 @app.post("/store-result")
 def store_result(request: StoreResultRequest):
-    result_id = convex.mutation(
+    mutation_result = convex.mutation(
         "agentResults:insertResult",
         {
             "requestId": request.request_id,
@@ -91,6 +92,7 @@ def store_result(request: StoreResultRequest):
             "resultSummary": request.result_summary,
         },
     )
+    result_id = str(mutation_result)
 
     return {
         "status": "success",
