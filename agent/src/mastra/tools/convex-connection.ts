@@ -164,16 +164,64 @@ export const insertAgentResultTool = createTool({
     resultId: z.string().optional(),
     error: z.string().optional(),
   }),
-  execute: async ({ requestId, email, githubUrl, hostedApiUrl, resultSummary }) => {
+  execute: async (args) => {
     try {
-      const client = getConvexClient();
-      const resultId = await client.mutation("agentResults:insertResult" as any, {
+      // Log what we receive to debug
+      console.log("insert-agent-result tool called with args:", JSON.stringify(args, null, 2));
+      
+      if (!args || typeof args !== 'object') {
+        return {
+          success: false,
+          error: `Invalid args: ${typeof args}. Expected object.`,
+        };
+      }
+
+      const { requestId, email, githubUrl, hostedApiUrl, resultSummary } = args;
+      
+      // Validate all required parameters are present
+      const missing = [];
+      if (!requestId) missing.push('requestId');
+      if (!email) missing.push('email');
+      if (!githubUrl) missing.push('githubUrl');
+      if (!hostedApiUrl) missing.push('hostedApiUrl');
+      if (!resultSummary) missing.push('resultSummary');
+      
+      if (missing.length > 0) {
+        console.error("Missing required parameters:", missing);
+        console.error("Received args keys:", Object.keys(args));
+        console.error("Args values:", { 
+          requestId: !!requestId, 
+          email: !!email, 
+          githubUrl: !!githubUrl, 
+          hostedApiUrl: !!hostedApiUrl, 
+          resultSummary: !!resultSummary 
+        });
+        return {
+          success: false,
+          error: `Missing required parameters: ${missing.join(', ')}. Received keys: ${Object.keys(args).join(', ')}`,
+        };
+      }
+
+      console.log("Calling Convex mutation with parameters:", {
         requestId,
         email,
         githubUrl,
         hostedApiUrl,
-        resultSummary,
+        resultSummaryLength: resultSummary?.length || 0,
       });
+
+      const client = getConvexClient();
+      const mutationArgs = {
+        requestId: String(requestId),
+        email: String(email),
+        githubUrl: String(githubUrl),
+        hostedApiUrl: String(hostedApiUrl),
+        resultSummary: String(resultSummary),
+      };
+      
+      console.log("Mutation args being sent:", mutationArgs);
+      
+      const resultId = await client.mutation("agentResults:insertResult" as any, mutationArgs);
 
       console.log(`Agent result written to Convex with ID: ${resultId}`);
       
@@ -183,6 +231,7 @@ export const insertAgentResultTool = createTool({
       };
     } catch (error: any) {
       console.error("Error inserting agent result:", error);
+      console.error("Error stack:", error.stack);
       return {
         success: false,
         error: error.message || "Failed to insert agent result",
