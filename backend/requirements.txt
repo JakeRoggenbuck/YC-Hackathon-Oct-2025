@@ -33,7 +33,7 @@ cffi==2.0.0
 charset-normalizer==3.4.4
 coloredlogs==15.0.1
 cryptography==46.0.3
-filelock==3.20.0
+filelock==3.20.1
 flatbuffers==25.9.23
 fsspec==2025.10.0
 h11==0.16.0
